@@ -42,8 +42,8 @@ cd editor && npm install && npm run dev
 
 Rồi mở:
 
-- <http://localhost:5173> — editor: kéo Hero/CTA từ panel Blocks vào canvas, sửa nội dung ở tab
-  Settings (traits), bấm **Publish**
+- <http://localhost:5173> — editor: kéo Hero/CTA từ sidebar phải vào canvas, chọn block rồi sửa
+  nội dung ở ô **Thuộc tính** ngay dưới, bấm **Publish**
 - <http://localhost:3000/p/demo> — trang công khai, render bằng `Hero.tsx` / `CTA.tsx`
 
 Trang seed có `slug = "demo"`, `id = 1`. Đổi page bằng query: `http://localhost:5173/?pageId=<id>`.

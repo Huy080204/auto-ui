@@ -2,13 +2,18 @@ package auto.ui.api.service.impl;
 
 import auto.ui.api.config.SecurityConstant;
 import auto.ui.api.constant.AIConstant;
+import auto.ui.api.dto.ErrorCode;
+import auto.ui.api.exception.BadRequestException;
 import auto.ui.api.jwt.BaseJwt;
 import auto.ui.api.model.Account;
 import auto.ui.api.model.Group;
 import auto.ui.api.repository.AccountRepository;
 import auto.ui.api.repository.GroupRepository;
+import auto.ui.api.service.mfa.TotpManager;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -47,6 +52,12 @@ public class UserServiceImpl implements UserDetailsService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private TotpManager totpManager;
+
+    @Value("${mfa}")
+    private Boolean isMfaEnable;
 
     @Override
     public UserDetails loadUserByUsername(String userId) {
@@ -99,6 +110,49 @@ public class UserServiceImpl implements UserDetailsService {
         List<String> roles = new ArrayList<>();
         group.getPermissions().stream().filter(f -> f.getPCode() != null).forEach(pName -> roles.add(pName.getPCode()));
         return roles.stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase())).collect(Collectors.toSet());
+    }
+
+    public OAuth2AccessToken getAccessTokenForPasswordOtp(ClientDetails client, String username, String password, String otp, String grantType, AuthorizationServerTokenServices tokenServices) {
+        if (isMfaEnable && StringUtils.isBlank(otp)) {
+            throw new BadRequestException("otp cannot be null", ErrorCode.AUTH_GRANT_TYPE_PASSWORD_MFA_ERROR_OTP_BLANK);
+        }
+
+        Map<String, String> requestParameters = new HashMap<>();
+        requestParameters.put("grant_type", grantType);
+        String clientId = client.getClientId();
+        boolean approved = true;
+        Set<String> responseTypes = new HashSet<>();
+        Map<String, Serializable> extensionProperties = new HashMap<>();
+        UserDetails userDetails = loadUserForPasswordOtp(username, password, otp);
+
+        OAuth2Request oAuth2Request = new OAuth2Request(requestParameters, clientId,
+                userDetails.getAuthorities(), approved, client.getScope(),
+                client.getResourceIds(), null, responseTypes, extensionProperties);
+        org.springframework.security.core.userdetails.User userPrincipal = new org.springframework.security.core.userdetails.User(userDetails.getUsername(), userDetails.getPassword(), userDetails.isEnabled(), userDetails.isAccountNonExpired(), userDetails.isCredentialsNonExpired(), userDetails.isAccountNonLocked(), userDetails.getAuthorities());
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userPrincipal, null, userDetails.getAuthorities());
+        OAuth2Authentication auth = new OAuth2Authentication(oAuth2Request, authenticationToken);
+        return tokenServices.createAccessToken(auth);
+    }
+
+    private UserDetails loadUserForPasswordOtp(String username, String password, String otp) {
+        Account user = accountRepository.findFirstByUsernameOrEmailOrPhoneAndStatus(username, AIConstant.STATUS_ACTIVE)
+                .orElseThrow(() -> new UsernameNotFoundException("Invalid username or password!"));
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new UsernameNotFoundException("Invalid username or password!");
+        }
+
+        if (isMfaEnable) {
+            boolean isVerified = user.getSecretKey() != null && totpManager.verifyCode(otp, user.getSecretKey());
+            if (!isVerified) {
+                throw new BadRequestException("Verified Fail", ErrorCode.ACCOUNT_ERROR_OPT_INVALID);
+            }
+            if (!Boolean.TRUE.equals(user.getIsMfa())) {
+                user.setIsMfa(true);
+                accountRepository.save(user);
+            }
+        }
+        Set<GrantedAuthority> grantedAuthorities = getAccountPermission(user);
+        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), true, true, true, true, grantedAuthorities);
     }
 
     public OAuth2AccessToken getAccessTokenForMultipleTenancies(ClientDetails client, TokenRequest tokenRequest, String username, String password, String tenant, AuthorizationServerTokenServices tokenServices) throws GeneralSecurityException, IOException {

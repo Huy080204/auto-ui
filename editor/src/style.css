@@ -51,7 +51,60 @@ body {
   cursor: default;
 }
 
-#gjs {
+.workspace {
+  display: flex;
   height: calc(100vh - 48px);
+}
+
+#gjs {
+  flex: 1;
+  min-width: 0;
   border: 0;
+}
+
+.sidebar {
+  width: 280px;
+  flex: none;
+  overflow-y: auto;
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+.sidebar .panel {
+  padding: 16px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.12);
+}
+
+.sidebar h2 {
+  margin: 0;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+}
+
+.sidebar .hint {
+  margin: 4px 0 12px;
+  font-size: 12px;
+  opacity: 0.45;
+}
+
+/* GrapesJS tô nền riêng cho các manager (gjs-one-bg) — cho trong suốt để ăn theo sidebar */
+.sidebar .gjs-blocks-c,
+.sidebar .gjs-traits-cs,
+.sidebar .gjs-one-bg {
+  background: transparent;
+}
+
+.sidebar .gjs-two-color,
+.sidebar .gjs-label,
+.sidebar .gjs-trt-trait__label {
+  color: inherit;
+}
+
+.sidebar .gjs-block {
+  background: rgba(226, 232, 240, 0.06);
+  border: 1px solid rgba(226, 232, 240, 0.15);
+  border-radius: 6px;
+  color: inherit;
 }

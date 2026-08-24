@@ -6,6 +6,7 @@ import auto.ui.api.dto.ApiResponse;
 import auto.ui.api.dto.ErrorCode;
 import auto.ui.api.dto.ResponseListDto;
 import auto.ui.api.dto.account.AccountDto;
+import auto.ui.api.dto.account.AccountMfaDto;
 import auto.ui.api.dto.account.ForgetPasswordDto;
 import auto.ui.api.dto.account.RequestForgetPasswordForm;
 import auto.ui.api.exception.BadRequestException;
@@ -13,7 +14,9 @@ import auto.ui.api.exception.NotFoundException;
 import auto.ui.api.exception.UnauthorizationException;
 import auto.ui.api.form.account.CreateAccountAdminForm;
 import auto.ui.api.form.account.ForgetPasswordForm;
+import auto.ui.api.form.account.LoginForm;
 import auto.ui.api.form.account.UpdateAccountAdminForm;
+import auto.ui.api.form.account.UpdateMfaForm;
 import auto.ui.api.form.account.UpdateProfileAdminForm;
 import auto.ui.api.mapper.AccountMapper;
 import auto.ui.api.model.Account;
@@ -23,11 +26,13 @@ import auto.ui.api.repository.AccountRepository;
 import auto.ui.api.repository.GroupRepository;
 import auto.ui.api.service.BaseApiService;
 import auto.ui.api.service.FileService;
+import auto.ui.api.service.mfa.TotpManager;
 import auto.ui.api.utils.AESUtils;
 import auto.ui.api.utils.ConvertUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -60,6 +65,10 @@ public class AccountController extends ABasicController {
     private BaseApiService baseApiService;
     @Autowired
     private FileService fileService;
+    @Autowired
+    private TotpManager totpManager;
+    @Value("${mfa}")
+    private Boolean isMfaEnable;
 
     @PostMapping(value = "/create-admin", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ACC_C_AD')")
@@ -241,6 +250,61 @@ public class AccountController extends ABasicController {
         apiMessageDto.setResult(true);
         apiMessageDto.setMessage("Change password success.");
         return apiMessageDto;
+    }
+
+    @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Transactional
+    public ApiResponse<AccountMfaDto> login(@Valid @RequestBody LoginForm form, BindingResult bindingResult) {
+        Account account = accountRepository.findFirstByUsernameOrEmailOrPhoneAndStatus(form.getUsername(), AIConstant.STATUS_ACTIVE)
+                .orElseThrow(() -> new NotFoundException("[Account] Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
+        if (!passwordEncoder.matches(form.getPassword(), account.getPassword())) {
+            throw new BadRequestException("[Account] Wrong password", ErrorCode.ACCOUNT_ERROR_WRONG_PASSWORD);
+        }
+
+        AccountMfaDto accountMfaDto = new AccountMfaDto();
+        accountMfaDto.setIsMfaEnable(Boolean.TRUE.equals(isMfaEnable));
+        if (Boolean.TRUE.equals(isMfaEnable)) {
+            boolean isMfa = Boolean.TRUE.equals(account.getIsMfa());
+            accountMfaDto.setIsMfa(isMfa);
+            if (!isMfa) {
+                if (StringUtils.isBlank(account.getSecretKey())) {
+                    account.setSecretKey(totpManager.generateSecret());
+                    accountRepository.save(account);
+                }
+                String qrCodeUrl;
+                if (account.getUsername() != null) {
+                    qrCodeUrl = totpManager.getUriForImage(account.getSecretKey(), account.getUsername());
+                } else if (account.getPhone() != null) {
+                    qrCodeUrl = totpManager.getUriForImage(account.getSecretKey(), account.getPhone());
+                } else if (account.getEmail() != null) {
+                    qrCodeUrl = totpManager.getUriForImage(account.getSecretKey(), account.getEmail());
+                } else {
+                    throw new BadRequestException("Account can not scanned qr to authorize");
+                }
+                accountMfaDto.setQrUrl(qrCodeUrl);
+            }
+        }
+
+        ApiResponse<AccountMfaDto> apiMessageDto = new ApiResponse<>();
+        apiMessageDto.setResult(true);
+        apiMessageDto.setData(accountMfaDto);
+        apiMessageDto.setMessage("Login success");
+        return apiMessageDto;
+    }
+
+    @PutMapping(value = "/reset-mfa", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasRole('ACC_U_MFA')")
+    @Transactional
+    public ApiMessageDto<Void> resetMfa(@Valid @RequestBody UpdateMfaForm form, BindingResult bindingResult) {
+        if (!isSuperAdmin()) {
+            throw new UnauthorizationException("[Account] Not allowed to reset mfa.");
+        }
+        Account account = accountRepository.findById(form.getId())
+                .orElseThrow(() -> new NotFoundException("[Account] Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
+        account.setSecretKey(null);
+        account.setIsMfa(false);
+        accountRepository.save(account);
+        return makeSuccessResponse("Reset mfa success");
     }
 
     @GetMapping(value = "/list", produces = MediaType.APPLICATION_JSON_VALUE)

@@ -14,7 +14,26 @@
       <a id="view-link" class="btn ghost" target="_blank" rel="noreferrer">Xem trang</a>
       <button id="publish" class="btn">Publish</button>
     </header>
-    <div id="gjs"></div>
+    <!--
+      Sidebar cố định thay cho panel toggle mặc định của GrapesJS: Style Manager bị bỏ
+      trống có chủ đích (admin không sửa CSS) nên để GrapesJS tự chọn panel nào hiện
+      thì hay rơi vào cái panel rỗng đó, nhìn như editor hỏng.
+    -->
+    <div class="workspace">
+      <div id="gjs"></div>
+      <aside class="sidebar">
+        <section class="panel">
+          <h2>Blocks</h2>
+          <p class="hint">Kéo thả vào vùng trắng bên trái</p>
+          <div id="blocks"></div>
+        </section>
+        <section class="panel">
+          <h2>Thuộc tính</h2>
+          <p class="hint">Chọn một block để sửa nội dung</p>
+          <div id="traits"></div>
+        </section>
+      </aside>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

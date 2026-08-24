@@ -1,10 +1,16 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    <changeSet author="Huy Pham (generated)" id="1787562265650-1">
+    <changeSet author="Authentication" id="1787562265650-1">
         <createTable tableName="db_page">
             <column name="id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="db_pagePK"/>
             </column>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="page_config" type="LONGTEXT"/>
+            <column name="project_data" type="LONGTEXT"/>
+            <column name="published_at" type="datetime"/>
+            <column name="slug" type="VARCHAR(255)"/>
+            <column name="version" type="BIGINT"/>
             <column name="created_by" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
@@ -20,12 +26,24 @@
             <column name="status" type="INT">
                 <constraints nullable="false"/>
             </column>
-            <column name="name" type="VARCHAR(255)"/>
-            <column name="page_config" type="LONGTEXT"/>
-            <column name="project_data" type="LONGTEXT"/>
-            <column name="published_at" type="datetime"/>
-            <column name="slug" type="VARCHAR(255)"/>
-            <column name="version" type="BIGINT"/>
         </createTable>
+    </changeSet>
+    <changeSet author="Authentication" id="1787562265650-2">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM db_page WHERE slug = 'demo'</sqlCheck>
+        </preConditions>
+        <insert tableName="db_page">
+            <column name="id" valueNumeric="1"/>
+            <column name="name" value="Trang demo"/>
+            <column name="slug" value="demo"/>
+            <column name="page_config"><![CDATA[{"blocks":[{"type":"hero","props":{"title":"ITZ Solution","subtitle":"Trang này được render từ page_config, không phải HTML lưu sẵn.","variant":"dark"}},{"type":"cta","props":{"text":"Liên hệ","href":"/contact","note":"Phản hồi trong 24h"}}]}]]></column>
+            <column name="version" valueNumeric="0"/>
+            <column name="published_at" valueDate="2026-01-01T00:00:00"/>
+            <column name="created_by" value="system"/>
+            <column name="created_date" valueDate="2026-01-01T00:00:00"/>
+            <column name="modified_by" value="system"/>
+            <column name="modified_date" valueDate="2026-01-01T00:00:00"/>
+            <column name="status" valueNumeric="1"/>
+        </insert>
     </changeSet>
 </databaseChangeLog>

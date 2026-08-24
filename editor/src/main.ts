@@ -28,10 +28,13 @@ const editor: Editor = grapesjs.init({
   container: '#gjs',
   height: '100%',
   fromElement: false,
-  blockManager: { blocks: [] }, // xoá block mặc định
+  // appendTo: gắn thẳng vào sidebar cố định trong index.html, không dùng panel
+  // toggle mặc định — panel đó tự chọn tab nào hiện và hay rơi vào Style Manager rỗng
+  blockManager: { appendTo: '#blocks', blocks: [] }, // blocks: [] = xoá block mặc định
+  traitManager: { appendTo: '#traits' },
   styleManager: { sectors: [] }, // admin không sửa CSS
   selectorManager: { componentFirst: true },
-  panels: {},
+  panels: { defaults: [] }, // bỏ toàn bộ panel mặc định của GrapesJS
   storageManager: {
     type: 'spring',
     autosave: true,
@@ -101,14 +104,7 @@ publishBtn.addEventListener('click', async () => {
   }
 });
 
-/**
- * Mở sẵn panel Blocks để admin kéo thả ngay, thay vì Style Manager (đang trống).
- * Phải đặt trong 'load' — gọi ngay sau init thì GrapesJS render panel xong mới set
- * button mặc định của nó, ghi đè lại lựa chọn này.
- */
 editor.on('load', () => {
-  editor.Panels.getButton('views', 'open-blocks')?.set('active', true);
-
   // Canvas trống thì nói cho admin biết phải làm gì, đừng để trắng trơn
   const doc = editor.Canvas.getDocument();
   const hint = doc.createElement('style');

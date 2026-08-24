@@ -40,4 +40,10 @@ public class Account extends Auditable<String> {
 
     @Column(name = "is_super_admin")
     private Boolean isSuperAdmin = false;
+
+    @Column(name = "is_mfa")
+    private Boolean isMfa = false;
+
+    @Column(name = "secret_key")
+    private String secretKey;
 }

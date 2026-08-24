@@ -2,6 +2,17 @@ package auto.ui.api.dto;
 
 public class ErrorCode {
     /**
+     * Auth error code
+     */
+    public static final String AUTH_GRANT_TYPE_PASSWORD_MFA_ERROR_OTP_BLANK = "ERROR-AUTH-000";
+
+    /**
+     * Setting error code
+     */
+    public static final String SETTING_ERROR_NOT_FOUND = "ERROR-SETTING-000";
+    public static final String SETTING_ERROR_EXISTED_GROUP_NAME_AND_KEY_NAME = "ERROR-SETTING-001";
+
+    /**
      * Group error code
      */
     public static final String GROUP_ERROR_NAME_EXIST = "ERROR-GROUP-000";

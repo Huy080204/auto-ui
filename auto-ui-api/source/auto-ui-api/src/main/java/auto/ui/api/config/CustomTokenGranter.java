@@ -1,17 +1,18 @@
 package auto.ui.api.config;
 
 import auto.ui.api.service.impl.UserServiceImpl;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
-import org.springframework.security.oauth2.provider.*;
+import org.springframework.security.oauth2.provider.ClientDetails;
+import org.springframework.security.oauth2.provider.ClientDetailsService;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.oauth2.provider.OAuth2RequestFactory;
+import org.springframework.security.oauth2.provider.TokenRequest;
 import org.springframework.security.oauth2.provider.token.AbstractTokenGranter;
 import org.springframework.security.oauth2.provider.token.AuthorizationServerTokenServices;
 
-@Slf4j
 public class CustomTokenGranter extends AbstractTokenGranter {
-
     private UserServiceImpl userService;
     private AuthenticationManager authenticationManager;
 
@@ -32,13 +33,13 @@ public class CustomTokenGranter extends AbstractTokenGranter {
 
     protected OAuth2AccessToken getAccessToken(ClientDetails client, TokenRequest tokenRequest) {
         String username = tokenRequest.getRequestParameters().get("username");
-        String grantType = tokenRequest.getGrantType();
-        try {
-            log.error("Chưa phát triển custom token granter, grantType: {}", grantType);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new InvalidTokenException("account or tenant invalid");
+        String password = tokenRequest.getRequestParameters().get("password");
+        String grantType = tokenRequest.getRequestParameters().get("grant_type");
+        if (SecurityConstant.GRANT_TYPE_PASSWORD_MFA.equalsIgnoreCase(tokenRequest.getGrantType())) {
+            String otp = tokenRequest.getRequestParameters().get("otp");
+            return userService.getAccessTokenForPasswordOtp(client, username, password, otp, grantType, this.getTokenServices());
+        } else {
+            throw new InvalidTokenException("grant_type invalid");
         }
-        return null;
     }
 }
