@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  Seed dữ liệu cho bản demo GrapesJS: một trang slug = "demo" để editor có sẵn thứ để mở.
+  Đây là changelog DỮ LIỆU, không phải schema — `mvn liquibase:diff` không sinh được loại này
+  (diff chỉ so sánh cấu trúc bảng), nên file này viết tay. Mọi thay đổi SCHEMA vẫn phải đi qua
+  skill itz-liquibase-diff như thường lệ.
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+    <changeSet author="Authentication" id="seed-page-demo-1">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM db_page WHERE slug = 'demo'</sqlCheck>
+        </preConditions>
+        <insert tableName="db_page">
+            <column name="id" valueNumeric="1"/>
+            <column name="name" value="Trang demo"/>
+            <column name="slug" value="demo"/>
+            <column name="page_config"><![CDATA[{"blocks":[{"type":"hero","props":{"title":"ITZ Solution","subtitle":"Trang này được render từ page_config, không phải HTML lưu sẵn.","variant":"dark"}},{"type":"cta","props":{"text":"Liên hệ","href":"/contact","note":"Phản hồi trong 24h"}}]}]]></column>
+            <column name="version" valueNumeric="0"/>
+            <column name="published_at" valueDate="2026-01-01T00:00:00"/>
+            <column name="created_by" value="system"/>
+            <column name="created_date" valueDate="2026-01-01T00:00:00"/>
+            <column name="modified_by" value="system"/>
+            <column name="modified_date" valueDate="2026-01-01T00:00:00"/>
+            <column name="status" valueNumeric="1"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

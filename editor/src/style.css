@@ -1,0 +1,57 @@
+@import 'grapesjs/dist/css/grapes.min.css';
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+  padding: 0 16px;
+  background: #0f172a;
+  color: #f8fafc;
+  font-size: 14px;
+}
+
+.topbar .spacer {
+  flex: 1;
+}
+
+.muted {
+  opacity: 0.6;
+}
+
+.btn {
+  padding: 6px 16px;
+  border: 0;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn.ghost {
+  background: transparent;
+  border: 1px solid rgba(248, 250, 252, 0.3);
+  font-weight: 400;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+#gjs {
+  height: calc(100vh - 48px);
+  border: 0;
+}
