@@ -66,6 +66,8 @@ public class AIConstant {
     public static final Integer REACTION_TYPE_LIKE = 1;
     public static final Integer REACTION_TYPE_DISLIKE = 0;
 
+    public static final String FILE_UPLOAD_TYPE_PAGE = "PAGE";
+
     private AIConstant() {
         throw new IllegalStateException("Utility class");
     }

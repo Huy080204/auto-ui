@@ -15,6 +15,7 @@ import auto.ui.api.mapper.PageMapper;
 import auto.ui.api.model.Page;
 import auto.ui.api.model.criteria.PageCriteria;
 import auto.ui.api.repository.PageRepository;
+import auto.ui.api.service.FileService;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,9 @@ public class PageController extends ABasicController {
 
     @Autowired
     private PageMapper pageMapper;
+
+    @Autowired
+    private FileService fileService;
 
     @GetMapping(value = "/get/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiMessageDto<PageDto> get(@PathVariable Long id) {
@@ -100,6 +104,7 @@ public class PageController extends ABasicController {
         Page page = pageRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Not found Page", ErrorCode.PAGE_ERROR_NOT_FOUND));
         pageRepository.delete(page);
+        fileService.deletePageFolder(id);
         return makeSuccessResponse("Delete page success");
     }
 
