@@ -56,4 +56,10 @@ public class ErrorCode {
     public static final String PAGE_ERROR_INVALID_BLOCK = "ERROR-PAGE-002";
     public static final String PAGE_ERROR_NOT_PUBLISHED = "ERROR-PAGE-003";
     public static final String PAGE_ERROR_SLUG_EXIST = "ERROR-PAGE-004";
+
+    /**
+     * Category error code
+     */
+    public static final String CATEGORY_ERROR_NOT_FOUND = "ERROR-CATEGORY-000";
+    public static final String CATEGORY_ERROR_NAME_EXIST = "ERROR-CATEGORY-001";
 }
