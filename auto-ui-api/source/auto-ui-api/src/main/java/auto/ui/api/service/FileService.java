@@ -1,12 +1,17 @@
 package auto.ui.api.service;
 
+import auto.ui.api.constant.AIConstant;
 import auto.ui.api.dto.ApiMessageDto;
+import auto.ui.api.dto.ErrorCode;
 import auto.ui.api.dto.file.UploadFileDto;
 import auto.ui.api.exception.BadRequestException;
+import auto.ui.api.exception.NotFoundException;
 import auto.ui.api.form.file.UploadFileForm;
+import auto.ui.api.repository.PageRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -30,10 +35,12 @@ import java.util.List;
 public class FileService {
     static final String[] UPLOAD_TYPES = new String[]{"AVATAR", "LOGO", "SETTING"};
     static final String[] AVATAR_EXTENSION = new String[]{"jpeg", "jpg", "gif", "bmp", "png"};
-    public static final String PAGE_TYPE = "PAGE";
 
     @Value("${file.upload-dir}")
     private String ROOT_DIRECTORY;
+
+    @Autowired
+    private PageRepository pageRepository;
 
     public ApiMessageDto<UploadFileDto> storeFile(UploadFileForm uploadFileForm) {
         boolean contains = Arrays.stream(UPLOAD_TYPES).anyMatch(uploadFileForm.getType()::equalsIgnoreCase);
@@ -43,6 +50,14 @@ public class FileService {
         boolean checkExtension = uploadFileForm.getType().equals("AVATAR") || uploadFileForm.getType().equals("LOGO");
         String typeFolder = File.separator + uploadFileForm.getType();
         return store(uploadFileForm.getFile(), uploadFileForm.getType(), checkExtension, typeFolder);
+    }
+
+    public ApiMessageDto<UploadFileDto> storePageFile(MultipartFile file, Long pageId) {
+        if (!pageRepository.existsById(pageId)) {
+            throw new NotFoundException("Not found Page", ErrorCode.PAGE_ERROR_NOT_FOUND);
+        }
+        String typeFolder = File.separator + AIConstant.FILE_UPLOAD_TYPE_PAGE + File.separator + pageId;
+        return store(file, AIConstant.FILE_UPLOAD_TYPE_PAGE, true, typeFolder);
     }
 
     public ApiMessageDto<UploadFileDto> store(MultipartFile file, String type, boolean checkExtension, String typeFolder) {
@@ -124,7 +139,7 @@ public class FileService {
         if (pageId == null) {
             return;
         }
-        File folder = new File(ROOT_DIRECTORY + File.separator + PAGE_TYPE + File.separator + pageId);
+        File folder = new File(ROOT_DIRECTORY + File.separator + AIConstant.FILE_UPLOAD_TYPE_PAGE + File.separator + pageId);
         if (folder.isDirectory()) {
             FileSystemUtils.deleteRecursively(folder);
         }

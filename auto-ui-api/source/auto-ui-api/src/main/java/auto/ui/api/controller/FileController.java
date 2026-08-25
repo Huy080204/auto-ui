@@ -1,12 +1,9 @@
 package auto.ui.api.controller;
 
 import auto.ui.api.dto.ApiMessageDto;
-import auto.ui.api.dto.ErrorCode;
 import auto.ui.api.dto.file.UploadFileDto;
-import auto.ui.api.exception.NotFoundException;
 import auto.ui.api.form.file.UploadFileForm;
 import auto.ui.api.form.file.UploadPageFileForm;
-import auto.ui.api.repository.PageRepository;
 import auto.ui.api.service.FileService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -35,9 +31,6 @@ public class FileController {
     @Autowired
     private FileService fileService;
 
-    @Autowired
-    private PageRepository pageRepository;
-
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('FILE_U')")
     public ApiMessageDto<UploadFileDto> upload(@Valid UploadFileForm uploadFileForm, BindingResult bindingResult) {
@@ -49,11 +42,7 @@ public class FileController {
     @PostMapping(value = "/upload-page", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('FILE_U')")
     public ApiMessageDto<UploadFileDto> uploadPage(@Valid UploadPageFileForm uploadPageFileForm, BindingResult bindingResult) {
-        if (!pageRepository.existsById(uploadPageFileForm.getPageId())) {
-            throw new NotFoundException("Not found Page", ErrorCode.PAGE_ERROR_NOT_FOUND);
-        }
-        String typeFolder = File.separator + FileService.PAGE_TYPE + File.separator + uploadPageFileForm.getPageId();
-        ApiMessageDto<UploadFileDto> apiMessageDto = fileService.store(uploadPageFileForm.getFile(), FileService.PAGE_TYPE, true, typeFolder);
+        ApiMessageDto<UploadFileDto> apiMessageDto = fileService.storePageFile(uploadPageFileForm.getFile(), uploadPageFileForm.getPageId());
         apiMessageDto.setResult(true);
         return apiMessageDto;
     }
