@@ -12,28 +12,15 @@
       <span class="spacer"></span>
       <span id="status" class="muted">—</span>
       <a id="view-link" class="btn ghost" target="_blank" rel="noreferrer">Xem trang</a>
+      <button id="save" class="btn ghost" title="Lưu ngay (Ctrl+S)">Lưu</button>
       <button id="publish" class="btn">Publish</button>
     </header>
     <!--
-      Sidebar cố định thay cho panel toggle mặc định của GrapesJS: Style Manager bị bỏ
-      trống có chủ đích (admin không sửa CSS) nên để GrapesJS tự chọn panel nào hiện
-      thì hay rơi vào cái panel rỗng đó, nhìn như editor hỏng.
+      Không dựng sidebar riêng nữa: UI mặc định của GrapesJS (panel device/preview/code,
+      tab Style–Settings–Layers–Blocks) đúng là UI của grapesjs.com/demo.html, nên để
+      GrapesJS tự render toàn bộ vào #gjs.
     -->
-    <div class="workspace">
-      <div id="gjs"></div>
-      <aside class="sidebar">
-        <section class="panel">
-          <h2>Blocks</h2>
-          <p class="hint">Kéo thả vào vùng trắng bên trái</p>
-          <div id="blocks"></div>
-        </section>
-        <section class="panel">
-          <h2>Thuộc tính</h2>
-          <p class="hint">Chọn một block để sửa nội dung</p>
-          <div id="traits"></div>
-        </section>
-      </aside>
-    </div>
+    <div id="gjs"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
