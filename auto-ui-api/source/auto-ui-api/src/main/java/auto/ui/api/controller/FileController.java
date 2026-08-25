@@ -35,7 +35,6 @@ public class FileController {
     @PreAuthorize("hasRole('FILE_U')")
     public ApiMessageDto<UploadFileDto> upload(@Valid UploadFileForm uploadFileForm, BindingResult bindingResult) {
         ApiMessageDto<UploadFileDto> apiMessageDto = fileService.storeFile(uploadFileForm);
-        apiMessageDto.setResult(true);
         return apiMessageDto;
     }
 
@@ -43,7 +42,6 @@ public class FileController {
     @PreAuthorize("hasRole('FILE_U')")
     public ApiMessageDto<UploadFileDto> uploadPage(@Valid UploadPageFileForm uploadPageFileForm, BindingResult bindingResult) {
         ApiMessageDto<UploadFileDto> apiMessageDto = fileService.storePageFile(uploadPageFileForm.getFile(), uploadPageFileForm.getPageId());
-        apiMessageDto.setResult(true);
         return apiMessageDto;
     }
 
