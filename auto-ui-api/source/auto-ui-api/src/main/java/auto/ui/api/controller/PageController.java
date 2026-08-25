@@ -3,44 +3,35 @@ package auto.ui.api.controller;
 import auto.ui.api.constant.PageConstant;
 import auto.ui.api.dto.ApiMessageDto;
 import auto.ui.api.dto.ErrorCode;
+import auto.ui.api.dto.ResponseListDto;
 import auto.ui.api.dto.page.PageDto;
 import auto.ui.api.exception.BadRequestException;
 import auto.ui.api.exception.NotFoundException;
+import auto.ui.api.form.page.AutoSavePageForm;
+import auto.ui.api.form.page.CreatePageForm;
 import auto.ui.api.form.page.PublishPageForm;
 import auto.ui.api.form.page.UpdatePageForm;
 import auto.ui.api.mapper.PageMapper;
 import auto.ui.api.model.Page;
+import auto.ui.api.model.criteria.PageCriteria;
 import auto.ui.api.repository.PageRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
-/**
- * Trang GrapesJS: editor load/autosave/publish, Next.js đọc bản đã publish.
- *
- * Lệch có chủ đích so với itz-controller-conventions.md, đã thống nhất với chủ dự án:
- * - Không @PreAuthorize: bản demo bỏ auth (PLAN.md mục 4), editor chưa có màn login.
- *   Thay vào đó cả nhánh /v1/page/** được mở trong ResourceServerConfig.
- * - Không có create/delete/list: phạm vi demo chỉ 4 endpoint trong PLAN.md mục 4,
- *   nên cũng không có Criteria lẫn JpaSpecificationExecutor.
- * - /autosave và /publish là action riêng, không phải /update của bộ CRUD chuẩn:
- *   autosave chỉ ghi một cột opaque và phải trả version mới về cho optimistic lock.
- */
 @RestController
 @RequestMapping("/v1/page")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
@@ -53,10 +44,63 @@ public class PageController extends ABasicController {
     private PageMapper pageMapper;
 
     @GetMapping(value = "/get/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiMessageDto<PageDto> get(@PathVariable("id") Long id) {
+    public ApiMessageDto<PageDto> get(@PathVariable Long id) {
         Page page = pageRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Not found Page", ErrorCode.PAGE_ERROR_NOT_FOUND));
         return makeSuccessResponse(pageMapper.fromEntityToPageDto(page), "Get page success");
+    }
+
+    @GetMapping(value = "/list", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasRole('PAG_L')")
+    public ApiMessageDto<ResponseListDto<List<PageDto>>> list(PageCriteria pageCriteria,
+                                                              @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+        org.springframework.data.domain.Page<Page> pages =
+                pageRepository.findAll(pageCriteria.getCriteria(), pageable);
+        ResponseListDto<List<PageDto>> responseListDto =
+                makeResponseListDto(pages, pageMapper::fromEntityListToPageDtoList);
+        return makeSuccessResponse(responseListDto, "Get list page success");
+    }
+
+    @GetMapping(value = "/auto-complete", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiMessageDto<ResponseListDto<List<PageDto>>> autoComplete(PageCriteria pageCriteria, Pageable pageable) {
+        org.springframework.data.domain.Page<Page> pages =
+                pageRepository.findAll(pageCriteria.getCriteria(), pageable);
+        return makeSuccessResponse(makeResponseListDto(pages, pageMapper::fromEntityListToPageDtoAutoComplete),
+                "Get auto complete page success");
+    }
+
+    @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasRole('PAG_C')")
+    @Transactional
+    public ApiMessageDto<PageDto> create(@Valid @RequestBody CreatePageForm createPageForm, BindingResult bindingResult) {
+        if (pageRepository.existsBySlug(createPageForm.getSlug())) {
+            throw new BadRequestException("Page slug already exist", ErrorCode.PAGE_ERROR_SLUG_EXIST);
+        }
+        Page page = pageMapper.fromFormToEntity(createPageForm);
+        pageRepository.save(page);
+        return makeSuccessResponse(pageMapper.fromEntityToPageIdDto(page), "Create page success");
+    }
+
+    /** Chỉ đổi được name — slug bất biến, xem javadoc UpdatePageForm. */
+    @PutMapping(value = "/update", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasRole('PAG_U')")
+    @Transactional
+    public ApiMessageDto<Void> update(@Valid @RequestBody UpdatePageForm updatePageForm, BindingResult bindingResult) {
+        Page page = pageRepository.findById(updatePageForm.getId())
+                .orElseThrow(() -> new NotFoundException("Not found Page", ErrorCode.PAGE_ERROR_NOT_FOUND));
+        pageMapper.updateEntityFromForm(updatePageForm, page);
+        pageRepository.save(page);
+        return makeSuccessResponse("Update page success");
+    }
+
+    @DeleteMapping(value = "/delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasRole('PAG_D')")
+    @Transactional
+    public ApiMessageDto<Void> delete(@PathVariable("id") Long id) {
+        Page page = pageRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Not found Page", ErrorCode.PAGE_ERROR_NOT_FOUND));
+        pageRepository.delete(page);
+        return makeSuccessResponse("Delete page success");
     }
 
     /**
@@ -65,15 +109,14 @@ public class PageController extends ABasicController {
      */
     @PutMapping(value = "/autosave", produces = MediaType.APPLICATION_JSON_VALUE)
     @Transactional
-    public ApiMessageDto<PageDto> autosave(@Valid @RequestBody UpdatePageForm updatePageForm, BindingResult bindingResult) {
-        Page page = pageRepository.findById(updatePageForm.getId())
+    public ApiMessageDto<PageDto> autosave(@Valid @RequestBody AutoSavePageForm autoSavePageForm, BindingResult bindingResult) {
+        Page page = pageRepository.findById(autoSavePageForm.getId())
                 .orElseThrow(() -> new NotFoundException("Not found Page", ErrorCode.PAGE_ERROR_NOT_FOUND));
-        if (!Objects.equals(page.getVersion(), updatePageForm.getVersion())) {
+        if (!Objects.equals(page.getVersion(), autoSavePageForm.getVersion())) {
             throw new BadRequestException("Page was modified elsewhere, current version is "
                     + page.getVersion(), ErrorCode.PAGE_ERROR_VERSION_CONFLICT);
         }
-        pageMapper.updateEntityFromForm(updatePageForm, page);
-        // saveAndFlush: @Version chỉ tăng khi flush, mà editor cần version mới ngay trong response
+        pageMapper.autoSaveEntityFromForm(autoSavePageForm, page);
         pageRepository.saveAndFlush(page);
         return makeSuccessResponse(pageMapper.fromEntityToPageIdDto(page), "Autosave page success");
     }
@@ -94,9 +137,8 @@ public class PageController extends ABasicController {
         return makeSuccessResponse(pageMapper.fromEntityToPageIdDto(page), "Publish page success");
     }
 
-    /** Next.js đọc trang công khai theo slug — chỉ trả bản đã publish. */
     @GetMapping(value = "/public/get/{slug}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiMessageDto<PageDto> publicGet(@PathVariable("slug") String slug) {
+    public ApiMessageDto<PageDto> publicGet(@PathVariable String slug) {
         Page page = pageRepository.findFirstBySlug(slug)
                 .orElseThrow(() -> new NotFoundException("Not found Page", ErrorCode.PAGE_ERROR_NOT_FOUND));
         if (page.getPageConfig() == null) {

@@ -6,7 +6,7 @@ import auto.ui.api.dto.page.PageDto;
 import auto.ui.api.exception.BadRequestException;
 import auto.ui.api.exception.NotFoundException;
 import auto.ui.api.form.page.PublishPageForm;
-import auto.ui.api.form.page.UpdatePageForm;
+import auto.ui.api.form.page.AutoSavePageForm;
 import auto.ui.api.mapper.PageMapper;
 import auto.ui.api.model.Page;
 import auto.ui.api.repository.PageRepository;
@@ -86,7 +86,7 @@ class PageControllerTest {
     @Test
     void shouldReturnNewVersionWhenAutosaveVersionMatches() throws JsonProcessingException {
         Page page = page(3L);
-        UpdatePageForm form = new UpdatePageForm();
+        AutoSavePageForm form = new AutoSavePageForm();
         form.setId(PAGE_ID);
         form.setVersion(3L);
         form.setProjectData(json("{}"));
@@ -102,14 +102,14 @@ class PageControllerTest {
         assertThat(result.getResult()).isTrue();
         assertThat(result.getData().getVersion()).isEqualTo(4L);
         assertThat(result.getMessage()).isEqualTo("Autosave page success");
-        verify(pageMapper).updateEntityFromForm(form, page);
+        verify(pageMapper).autoSaveEntityFromForm(form, page);
         verify(pageRepository).saveAndFlush(page);
     }
 
     @Test
     void shouldThrowBadRequestWhenAutosaveVersionIsStale() throws JsonProcessingException {
         Page page = page(5L);
-        UpdatePageForm form = new UpdatePageForm();
+        AutoSavePageForm form = new AutoSavePageForm();
         form.setId(PAGE_ID);
         form.setVersion(3L);
         form.setProjectData(json("{}"));
@@ -123,7 +123,7 @@ class PageControllerTest {
 
     @Test
     void shouldThrowNotFoundWhenAutosaveTargetDoesNotExist() {
-        UpdatePageForm form = new UpdatePageForm();
+        AutoSavePageForm form = new AutoSavePageForm();
         form.setId(PAGE_ID);
         form.setVersion(0L);
         when(pageRepository.findById(PAGE_ID)).thenReturn(Optional.empty());

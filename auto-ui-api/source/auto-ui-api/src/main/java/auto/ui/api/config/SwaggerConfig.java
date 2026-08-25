@@ -11,7 +11,7 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi storeAuthApi() {
         return GroupedOpenApi.builder()
-                .group("storeAuthApi")
+                .group("auto-ui-api")
                 .packagesToScan("auto.ui.api.controller")
                 .build();
     }

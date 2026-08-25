@@ -1,16 +1,19 @@
 package auto.ui.api.form.page;
 
 import auto.ui.api.form.StringToLongDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
-@Getter
-@Setter
+/**
+ * Chỉ cho sửa name. Cố tình KHÔNG extends CreatePageForm dù itz-form-conventions.md
+ * đặt đó làm mặc định: slug là khoá tra cứu của trang công khai (/public/get/{slug}),
+ * đổi được là mọi liên kết đã phát ra ngoài chết theo — nên slug bất biến sau khi tạo.
+ */
+@Data
 @Schema
 public class UpdatePageForm {
     @NotNull(message = "id cant not be null")
@@ -18,13 +21,7 @@ public class UpdatePageForm {
     @Schema(name = "id", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long id;
 
-    /** ProjectData của GrapesJS — nhận nguyên cây JSON, backend không đọc nội dung. */
-    @NotNull(message = "projectData cant not be null")
-    @Schema(name = "projectData", requiredMode = Schema.RequiredMode.REQUIRED)
-    private JsonNode projectData;
-
-    /** Version editor đang giữ — lệch với version trong DB là có người khác đã sửa. */
-    @NotNull(message = "version cant not be null")
-    @Schema(name = "version", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Long version;
+    @NotBlank(message = "name cannot be null")
+    @Schema(name = "name", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String name;
 }
