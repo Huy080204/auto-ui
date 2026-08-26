@@ -52,7 +52,6 @@ public class PageController extends ABasicController {
     }
 
     @GetMapping(value = "/list", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('PAG_L')")
     public ApiMessageDto<ResponseListDto<List<PageDto>>> list(PageCriteria pageCriteria,
                                                               @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
         org.springframework.data.domain.Page<Page> pages =
@@ -71,7 +70,6 @@ public class PageController extends ABasicController {
     }
 
     @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('PAG_C')")
     @Transactional
     public ApiMessageDto<PageDto> create(@Valid @RequestBody CreatePageForm createPageForm, BindingResult bindingResult) {
         if (pageRepository.existsBySlug(createPageForm.getSlug())) {
@@ -85,7 +83,6 @@ public class PageController extends ABasicController {
 
     /** Chỉ đổi được name — slug bất biến, xem javadoc UpdatePageForm. Chỉ cho phép trên bản draft. */
     @PutMapping(value = "/update", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('PAG_U')")
     @Transactional
     public ApiMessageDto<Void> update(@Valid @RequestBody UpdatePageForm updatePageForm, BindingResult bindingResult) {
         Page page = pageRepository.findById(updatePageForm.getId())
@@ -99,7 +96,6 @@ public class PageController extends ABasicController {
     }
 
     @DeleteMapping(value = "/delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('PAG_D')")
     @Transactional
     public ApiMessageDto<Void> delete(@PathVariable("id") Long id) {
         Page page = pageRepository.findById(id)
@@ -125,7 +121,6 @@ public class PageController extends ABasicController {
 
     /** Clone 1 page active thành bản nháp mới — chặn nếu đã có draft trỏ tới nó. */
     @PostMapping(value = "/create-draft", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('PAG_C')")
     @Transactional
     public ApiMessageDto<PageDto> createDraft(@Valid @RequestBody CreateDraftPageForm createDraftPageForm, BindingResult bindingResult) {
         Page page = pageRepository.findById(createDraftPageForm.getId())
@@ -146,7 +141,6 @@ public class PageController extends ABasicController {
 
     /** Promote 1 bản draft thành active version — merge nội dung lên row active rồi xoá draft. */
     @PostMapping(value = "/public-version", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('PAG_U')")
     @Transactional
     public ApiMessageDto<Void> publicVersion(@Valid @RequestBody PublicVersionPageForm publicVersionPageForm, BindingResult bindingResult) {
         Page draft = pageRepository.findById(publicVersionPageForm.getId())
@@ -166,7 +160,6 @@ public class PageController extends ABasicController {
 
     /** Đặt 1 page làm default — tự động unset page default trước đó, đảm bảo chỉ 1 page default. */
     @PutMapping(value = "/set-default/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('PAG_U')")
     @Transactional
     public ApiMessageDto<Void> setDefault(@PathVariable("id") Long id) {
         Page page = pageRepository.findById(id)

@@ -46,7 +46,6 @@ public class SectionController extends ABasicController {
     private SectionMapper sectionMapper;
 
     @GetMapping(value = "/get/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('SEC_V')")
     public ApiMessageDto<SectionDto> get(@PathVariable Long id) {
         Section section = sectionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Not found section!", ErrorCode.SECTION_ERROR_NOT_FOUND));
@@ -54,7 +53,6 @@ public class SectionController extends ABasicController {
     }
 
     @GetMapping(value = "/list", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('SEC_L')")
     public ApiMessageDto<ResponseListDto<List<SectionDto>>> list(SectionCriteria sectionCriteria, @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<Section> page = sectionRepository.findAll(sectionCriteria.getCriteria(), pageable);
         ResponseListDto<List<SectionDto>> responseListDto =
@@ -63,7 +61,6 @@ public class SectionController extends ABasicController {
     }
 
     @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('SEC_C')")
     @Transactional
     public ApiMessageDto<SectionDto> create(@Valid @RequestBody CreateSectionForm createSectionForm, BindingResult bindingResult) {
         Section section = sectionMapper.fromFormToEntity(createSectionForm);
@@ -72,7 +69,6 @@ public class SectionController extends ABasicController {
     }
 
     @PutMapping(value = "/update", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('SEC_U')")
     @Transactional
     public ApiMessageDto<Void> update(@Valid @RequestBody UpdateSectionForm updateSectionForm, BindingResult bindingResult) {
         Section section = sectionRepository.findById(updateSectionForm.getId())
@@ -83,7 +79,6 @@ public class SectionController extends ABasicController {
     }
 
     @DeleteMapping(value = "/delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('SEC_D')")
     @Transactional
     public ApiMessageDto<Void> delete(@PathVariable Long id) {
         Section section = sectionRepository.findById(id)

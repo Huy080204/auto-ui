@@ -50,7 +50,6 @@ public class MediaLibraryController extends ABasicController {
     private FileService fileService;
 
     @GetMapping(value = "/list", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('MDL_L')")
     public ApiMessageDto<ResponseListDto<List<MediaLibraryDto>>> list(MediaLibraryCriteria mediaLibraryCriteria, @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<MediaLibrary> page = mediaLibraryRepository.findAll(mediaLibraryCriteria.getCriteria(), pageable);
         ResponseListDto<List<MediaLibraryDto>> responseListDto =
@@ -59,7 +58,6 @@ public class MediaLibraryController extends ABasicController {
     }
 
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('MDL_C')")
     @Transactional
     public ApiMessageDto<MediaLibraryDto> create(@Valid CreateMediaLibraryForm createMediaLibraryForm, BindingResult bindingResult) {
         ApiMessageDto<UploadFileDto> uploadResult = fileService.storeMediaLibraryFile(createMediaLibraryForm.getFile());
@@ -71,7 +69,6 @@ public class MediaLibraryController extends ABasicController {
     }
 
     @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('MDL_U')")
     @Transactional
     public ApiMessageDto<Void> update(@Valid UpdateMediaLibraryForm updateMediaLibraryForm, BindingResult bindingResult) {
         MediaLibrary mediaLibrary = mediaLibraryRepository.findById(updateMediaLibraryForm.getId())
@@ -84,7 +81,6 @@ public class MediaLibraryController extends ABasicController {
     }
 
     @DeleteMapping(value = "/delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('MDL_D')")
     @Transactional
     public ApiMessageDto<Void> delete(@PathVariable Long id) {
         MediaLibrary mediaLibrary = mediaLibraryRepository.findById(id)

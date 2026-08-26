@@ -4,16 +4,19 @@ import auto.ui.api.form.StringToLongDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotNull;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
 @Schema
-public class UpdateMediaLibraryForm extends CreateMediaLibraryForm {
+public class UpdateMediaLibraryForm {
     @NotNull(message = "id cannot be null")
     @JsonDeserialize(using = StringToLongDeserializer.class)
     @Schema(name = "id", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long id;
+
+    @NotNull(message = "file is required")
+    @Schema(name = "file", requiredMode = Schema.RequiredMode.REQUIRED)
+    private MultipartFile file;
 }

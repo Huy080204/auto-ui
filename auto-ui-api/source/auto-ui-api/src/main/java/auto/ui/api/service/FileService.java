@@ -70,22 +70,17 @@ public class FileService {
     }
 
     public ApiMessageDto<UploadFileDto> updateMediaLibraryFile(MultipartFile file, String existingUrl) {
-        String typeFolder = File.separator + AIConstant.FILE_UPLOAD_TYPE_MEDIA_LIBRARY;
-        String fileName = new File(existingUrl).getName();
         ApiMessageDto<UploadFileDto> apiMessageDto = new ApiMessageDto<>();
         try {
-            String uploadedFileName = StringUtils.cleanPath(file.getOriginalFilename());
-            String extension = FilenameUtils.getExtension(uploadedFileName);
+            String extension = FilenameUtils.getExtension(file.getOriginalFilename());
             if (!Arrays.stream(AVATAR_EXTENSION).anyMatch(extension::equalsIgnoreCase)) {
                 throw new BadRequestException("ERROR-FILE-FORMAT-INVALID", "File format is invalid");
             }
 
-            Path fileStorageLocation = Paths.get(ROOT_DIRECTORY + typeFolder).toAbsolutePath().normalize();
-            Files.createDirectories(fileStorageLocation);
-            Path targetLocation = fileStorageLocation.resolve(fileName);
+            Path targetLocation = Paths.get(ROOT_DIRECTORY + existingUrl).toAbsolutePath().normalize();
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
             UploadFileDto uploadFileDto = new UploadFileDto();
-            uploadFileDto.setFilePath(typeFolder + File.separator + fileName);
+            uploadFileDto.setFilePath(existingUrl);
             apiMessageDto.setData(uploadFileDto);
             apiMessageDto.setMessage("Upload file success");
         } catch (IOException e) {
