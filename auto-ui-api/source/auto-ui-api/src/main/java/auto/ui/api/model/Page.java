@@ -39,4 +39,6 @@ public class Page extends Auditable<String> {
     private Page activeVersion;
 
     private Boolean isDefault;
+
+    private Boolean isHasDraft = false;
 }

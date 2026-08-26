@@ -48,7 +48,12 @@ public class PageController extends ABasicController {
     public ApiMessageDto<PageDto> get(@PathVariable Long id) {
         Page page = pageRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Not found Page", ErrorCode.PAGE_ERROR_NOT_FOUND));
-        return makeSuccessResponse(pageMapper.fromEntityToPageDto(page), "Get page success");
+        PageDto pageDto = pageMapper.fromEntityToPageDto(page);
+        if (Boolean.TRUE.equals(page.getIsHasDraft())) {
+            pageRepository.findFirstByActiveVersionId(page.getId())
+                    .ifPresent(draft -> pageDto.setDraftPage(pageMapper.fromEntityToPageDto(draft)));
+        }
+        return makeSuccessResponse(pageDto, "Get page success");
     }
 
     @GetMapping(value = "/list", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -100,6 +105,11 @@ public class PageController extends ABasicController {
     public ApiMessageDto<Void> delete(@PathVariable("id") Long id) {
         Page page = pageRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Not found Page", ErrorCode.PAGE_ERROR_NOT_FOUND));
+        if (Boolean.TRUE.equals(page.getIsDraft()) && page.getActiveVersion() != null) {
+            Page activeVersion = page.getActiveVersion();
+            activeVersion.setIsHasDraft(false);
+            pageRepository.save(activeVersion);
+        }
         pageRepository.delete(page);
         fileService.deletePageFolder(id);
         return makeSuccessResponse("Delete page success");
@@ -136,6 +146,8 @@ public class PageController extends ABasicController {
         draft.setActiveVersion(page);
         draft.setIsDefault(false);
         pageRepository.save(draft);
+        page.setIsHasDraft(true);
+        pageRepository.save(page);
         return makeSuccessResponse(pageMapper.fromEntityToPageIdDto(draft), "Create draft page success");
     }
 
@@ -153,6 +165,7 @@ public class PageController extends ABasicController {
             throw new NotFoundException("Not found active version of this page", ErrorCode.PAGE_ERROR_NOT_FOUND);
         }
         pageMapper.updateEntityFromDraft(draft, activeVersion);
+        activeVersion.setIsHasDraft(false);
         pageRepository.save(activeVersion);
         pageRepository.delete(draft);
         return makeSuccessResponse("Promote draft to active version success");
