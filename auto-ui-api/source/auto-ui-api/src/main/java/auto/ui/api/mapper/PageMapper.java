@@ -32,6 +32,7 @@ public interface PageMapper {
     @Mapping(source = "isDraft", target = "isDraft")
     @Mapping(source = "activeVersion.id", target = "activeVersionId")
     @Mapping(source = "isDefault", target = "isDefault")
+    @Mapping(source = "isHasDraft", target = "isHasDraft")
     @BeanMapping(ignoreByDefault = true)
     @Named("fromEntityToPageDto")
     PageDto fromEntityToPageDto(Page page);

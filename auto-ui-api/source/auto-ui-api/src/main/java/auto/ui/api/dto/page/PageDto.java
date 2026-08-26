@@ -29,4 +29,10 @@ public class PageDto extends ABasicAdminDto {
 
     @Schema(name = "isDefault")
     private Boolean isDefault;
+
+    @Schema(name = "isHasDraft")
+    private Boolean isHasDraft;
+
+    @Schema(name = "draftPage")
+    private PageDto draftPage;
 }

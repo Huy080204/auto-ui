@@ -25,4 +25,9 @@ public interface PageRepository extends JpaRepository<Page, Long>, JpaSpecificat
     @Transactional
     @Query("UPDATE Page p SET p.isDefault = false WHERE p.isDefault = true AND p.id <> :id")
     void unsetDefaultExcept(@Param("id") Long id);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Page p WHERE p.activeVersion.id = :activeVersionId")
+    void deleteAllByActiveVersionId(@Param("activeVersionId") Long activeVersionId);
 }
