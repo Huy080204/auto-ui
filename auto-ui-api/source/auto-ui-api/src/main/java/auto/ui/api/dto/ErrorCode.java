@@ -62,4 +62,15 @@ public class ErrorCode {
      */
     public static final String CATEGORY_ERROR_NOT_FOUND = "ERROR-CATEGORY-000";
     public static final String CATEGORY_ERROR_NAME_EXIST = "ERROR-CATEGORY-001";
+
+    /**
+     * MediaLibrary error code
+     */
+    public static final String MEDIA_LIBRARY_ERROR_NOT_FOUND = "ERROR-MEDIA-LIBRARY-000";
+    public static final String MEDIA_LIBRARY_ERROR_UPLOAD_FAILED = "ERROR-MEDIA-LIBRARY-001";
+
+    /**
+     * Section error code
+     */
+    public static final String SECTION_ERROR_NOT_FOUND = "ERROR-SECTION-000";
 }

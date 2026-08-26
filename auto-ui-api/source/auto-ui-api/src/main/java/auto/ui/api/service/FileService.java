@@ -60,6 +60,46 @@ public class FileService {
         return store(file, AIConstant.FILE_UPLOAD_TYPE_PAGE, true, typeFolder);
     }
 
+    public ApiMessageDto<UploadFileDto> storeMediaLibraryFile(MultipartFile file) {
+        String typeFolder = File.separator + AIConstant.FILE_UPLOAD_TYPE_MEDIA_LIBRARY;
+        ApiMessageDto<UploadFileDto> uploadResult = store(file, AIConstant.FILE_UPLOAD_TYPE_MEDIA_LIBRARY, true, typeFolder);
+        if (Boolean.FALSE.equals(uploadResult.getResult())) {
+            throw new BadRequestException(uploadResult.getMessage(), ErrorCode.MEDIA_LIBRARY_ERROR_UPLOAD_FAILED);
+        }
+        return uploadResult;
+    }
+
+    public ApiMessageDto<UploadFileDto> updateMediaLibraryFile(MultipartFile file, String existingUrl) {
+        String typeFolder = File.separator + AIConstant.FILE_UPLOAD_TYPE_MEDIA_LIBRARY;
+        String fileName = new File(existingUrl).getName();
+        ApiMessageDto<UploadFileDto> apiMessageDto = new ApiMessageDto<>();
+        try {
+            String uploadedFileName = StringUtils.cleanPath(file.getOriginalFilename());
+            String extension = FilenameUtils.getExtension(uploadedFileName);
+            if (!Arrays.stream(AVATAR_EXTENSION).anyMatch(extension::equalsIgnoreCase)) {
+                throw new BadRequestException("ERROR-FILE-FORMAT-INVALID", "File format is invalid");
+            }
+
+            Path fileStorageLocation = Paths.get(ROOT_DIRECTORY + typeFolder).toAbsolutePath().normalize();
+            Files.createDirectories(fileStorageLocation);
+            Path targetLocation = fileStorageLocation.resolve(fileName);
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+            UploadFileDto uploadFileDto = new UploadFileDto();
+            uploadFileDto.setFilePath(typeFolder + File.separator + fileName);
+            apiMessageDto.setData(uploadFileDto);
+            apiMessageDto.setMessage("Upload file success");
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+            apiMessageDto.setResult(false);
+            apiMessageDto.setMessage("" + e.getMessage());
+        }
+
+        if (Boolean.FALSE.equals(apiMessageDto.getResult())) {
+            throw new BadRequestException(apiMessageDto.getMessage(), ErrorCode.MEDIA_LIBRARY_ERROR_UPLOAD_FAILED);
+        }
+        return apiMessageDto;
+    }
+
     public ApiMessageDto<UploadFileDto> store(MultipartFile file, String type, boolean checkExtension, String typeFolder) {
         ApiMessageDto<UploadFileDto> apiMessageDto = new ApiMessageDto<>();
         try {
