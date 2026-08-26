@@ -11,8 +11,7 @@ import javax.validation.constraints.NotNull;
 
 /**
  * Input của /autosave — không phải form update của bộ CRUD chuẩn, nên tách tên riêng:
- * nó chỉ ghi một cột opaque và mang theo version cho optimistic lock.
- * Sửa name/slug là việc của {@link UpdatePageForm}.
+ * nó chỉ ghi một cột opaque. Sửa name/slug là việc của {@link UpdatePageForm}.
  */
 @Getter
 @Setter
@@ -27,9 +26,4 @@ public class AutoSavePageForm {
     @NotNull(message = "projectData cant not be null")
     @Schema(name = "projectData", requiredMode = Schema.RequiredMode.REQUIRED)
     private JsonNode projectData;
-
-    /** Version editor đang giữ — lệch với version trong DB là có người khác đã sửa. */
-    @NotNull(message = "version cant not be null")
-    @Schema(name = "version", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Long version;
 }
