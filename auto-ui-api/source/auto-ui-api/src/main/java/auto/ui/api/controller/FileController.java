@@ -3,6 +3,7 @@ package auto.ui.api.controller;
 import auto.ui.api.dto.ApiMessageDto;
 import auto.ui.api.dto.file.UploadFileDto;
 import auto.ui.api.form.file.UploadFileForm;
+import auto.ui.api.form.file.UploadPageFileForm;
 import auto.ui.api.service.FileService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,13 @@ public class FileController {
     @PreAuthorize("hasRole('FILE_U')")
     public ApiMessageDto<UploadFileDto> upload(@Valid UploadFileForm uploadFileForm, BindingResult bindingResult) {
         ApiMessageDto<UploadFileDto> apiMessageDto = fileService.storeFile(uploadFileForm);
-        apiMessageDto.setResult(true);
+        return apiMessageDto;
+    }
+
+    @PostMapping(value = "/upload-page", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasRole('FILE_U')")
+    public ApiMessageDto<UploadFileDto> uploadPage(@Valid UploadPageFileForm uploadPageFileForm, BindingResult bindingResult) {
+        ApiMessageDto<UploadFileDto> apiMessageDto = fileService.storePageFile(uploadPageFileForm.getFile(), uploadPageFileForm.getPageId());
         return apiMessageDto;
     }
 
@@ -42,6 +49,27 @@ public class FileController {
     @Cacheable("images")
     public ResponseEntity<Resource> downloadFile(@PathVariable String folder, @PathVariable String fileName, HttpServletRequest request) throws FileNotFoundException {
         Resource resource = fileService.loadFileAsResource(folder, fileName);
+        String contentType = null;
+        try {
+            contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
+        } catch (IOException ex) {
+            log.info("Could not determine file type.");
+        }
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(7776000, TimeUnit.SECONDS))
+                .contentType(MediaType.parseMediaType(contentType))
+                //.header(HttpHeaders.EXPIRES, expires)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
+    }
+
+    @GetMapping("/download/{folder}/{pageId}/{fileName:.+}")
+    @Cacheable("images")
+    public ResponseEntity<Resource> downloadPageFile(@PathVariable String folder, @PathVariable String pageId, @PathVariable String fileName, HttpServletRequest request) throws FileNotFoundException {
+        Resource resource = fileService.loadFileAsResource(folder, pageId, fileName);
         String contentType = null;
         try {
             contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());

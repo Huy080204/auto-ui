@@ -52,10 +52,12 @@ public class ErrorCode {
      * Page error code
      */
     public static final String PAGE_ERROR_NOT_FOUND = "ERROR-PAGE-000";
-    public static final String PAGE_ERROR_VERSION_CONFLICT = "ERROR-PAGE-001";
-    public static final String PAGE_ERROR_INVALID_BLOCK = "ERROR-PAGE-002";
     public static final String PAGE_ERROR_NOT_PUBLISHED = "ERROR-PAGE-003";
     public static final String PAGE_ERROR_SLUG_EXIST = "ERROR-PAGE-004";
+    public static final String PAGE_ERROR_UPDATE_NOT_ALLOWED = "ERROR-PAGE-005";
+    public static final String PAGE_ERROR_ALREADY_DRAFT = "ERROR-PAGE-006";
+    public static final String PAGE_ERROR_DRAFT_EXISTS = "ERROR-PAGE-007";
+    public static final String PAGE_ERROR_NOT_DRAFT = "ERROR-PAGE-008";
 
     /**
      * Category error code

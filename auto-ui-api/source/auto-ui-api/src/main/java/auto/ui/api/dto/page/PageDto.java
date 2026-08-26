@@ -1,11 +1,11 @@
 package auto.ui.api.dto.page;
 
 import auto.ui.api.dto.ABasicAdminDto;
+import auto.ui.api.dto.LongToStringIfWebSerializer;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Date;
 
 @Getter
 @Setter
@@ -20,12 +20,13 @@ public class PageDto extends ABasicAdminDto {
     @Schema(name = "projectData")
     private String projectData;
 
-    @Schema(name = "pageConfig")
-    private String pageConfig;
+    @Schema(name = "isDraft")
+    private Boolean isDraft;
 
-    @Schema(name = "version")
-    private Long version;
+    @Schema(name = "activeVersionId")
+    @JsonSerialize(using = LongToStringIfWebSerializer.class)
+    private Long activeVersionId;
 
-    @Schema(name = "publishedAt")
-    private Date publishedAt;
+    @Schema(name = "isDefault")
+    private Boolean isDefault;
 }

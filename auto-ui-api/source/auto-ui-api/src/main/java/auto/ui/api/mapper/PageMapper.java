@@ -3,7 +3,6 @@ package auto.ui.api.mapper;
 import auto.ui.api.dto.page.PageDto;
 import auto.ui.api.form.page.AutoSavePageForm;
 import auto.ui.api.form.page.CreatePageForm;
-import auto.ui.api.form.page.PublishPageForm;
 import auto.ui.api.form.page.UpdatePageForm;
 import auto.ui.api.model.Page;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -30,9 +29,9 @@ public interface PageMapper {
     @Mapping(source = "name", target = "name")
     @Mapping(source = "slug", target = "slug")
     @Mapping(source = "projectData", target = "projectData")
-    @Mapping(source = "pageConfig", target = "pageConfig")
-    @Mapping(source = "version", target = "version")
-    @Mapping(source = "publishedAt", target = "publishedAt")
+    @Mapping(source = "isDraft", target = "isDraft")
+    @Mapping(source = "activeVersion.id", target = "activeVersionId")
+    @Mapping(source = "isDefault", target = "isDefault")
     @BeanMapping(ignoreByDefault = true)
     @Named("fromEntityToPageDto")
     PageDto fromEntityToPageDto(Page page);
@@ -57,18 +56,16 @@ public interface PageMapper {
     @Named("fromFormToEntity")
     Page fromFormToEntity(CreatePageForm createPageForm);
 
-    /** Bản rút gọn cho endpoint public — Next.js chỉ cần tên trang, config và mốc publish. */
+    /** Bản rút gọn cho endpoint public — Next.js chỉ cần tên trang và nội dung. */
     @Mapping(source = "name", target = "name")
     @Mapping(source = "slug", target = "slug")
-    @Mapping(source = "pageConfig", target = "pageConfig")
-    @Mapping(source = "publishedAt", target = "publishedAt")
+    @Mapping(source = "projectData", target = "projectData")
     @BeanMapping(ignoreByDefault = true)
     @Named("fromEntityToPublicPageDto")
     PageDto fromEntityToPublicPageDto(Page page);
 
-    /** Chỉ trả id + version — đủ để editor cập nhật optimistic lock sau autosave. */
+    /** Chỉ trả id — response chuẩn cho create theo itz-controller-conventions.md. */
     @Mapping(source = "id", target = "id")
-    @Mapping(source = "version", target = "version")
     @BeanMapping(ignoreByDefault = true)
     @Named("fromEntityToPageIdDto")
     PageDto fromEntityToPageIdDto(Page page);
@@ -82,12 +79,22 @@ public interface PageMapper {
     @BeanMapping(ignoreByDefault = true)
     void updateEntityFromForm(UpdatePageForm updatePageForm, @MappingTarget Page page);
 
-    @Mapping(source = "config", target = "pageConfig")
+    /** Clone bản active thành draft mới — name/slug/projectData, phần còn lại Controller tự set. */
+    @Mapping(source = "name", target = "name")
+    @Mapping(source = "slug", target = "slug")
+    @Mapping(source = "projectData", target = "projectData")
     @BeanMapping(ignoreByDefault = true)
-    void publishEntityFromForm(PublishPageForm publishPageForm, @MappingTarget Page page);
+    @Named("fromEntityToDraft")
+    Page fromEntityToDraft(Page page);
+
+    /** Merge nội dung draft lên row active khi promote — giữ nguyên id/slug/isDefault của active. */
+    @Mapping(source = "name", target = "name")
+    @Mapping(source = "projectData", target = "projectData")
+    @BeanMapping(ignoreByDefault = true)
+    void updateEntityFromDraft(Page draft, @MappingTarget Page activeVersion);
 
     /**
-     * Hai cột JSON lưu dạng chuỗi opaque, còn Form nhận nguyên cây JSON —
+     * Cột JSON lưu dạng chuỗi opaque, còn Form nhận nguyên cây JSON —
      * conversion nằm ở Mapper để Controller không phải setter tay.
      */
     default String jsonNodeToString(JsonNode node) {
