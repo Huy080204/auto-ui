@@ -1,0 +1,30 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="Authentication" id="1787737737528-1">
+        <addColumn tableName="db_page">
+            <column name="active_version_id" type="bigint"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="Authentication" id="1787737737528-2">
+        <addColumn tableName="db_page">
+            <column name="is_default" type="bit"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="Authentication" id="1787737737528-3">
+        <addColumn tableName="db_page">
+            <column name="is_draft" type="bit"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="Authentication" id="1787737737528-4">
+        <addForeignKeyConstraint baseColumnNames="active_version_id" baseTableName="db_page" constraintName="FKp1iyqml4mes9dbir56fjxcbyf" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="db_page" validate="true"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1787737737528-5">
+        <dropColumn columnName="page_config" tableName="db_page"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1787737737528-6">
+        <dropColumn columnName="published_at" tableName="db_page"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1787737737528-7">
+        <dropColumn columnName="version" tableName="db_page"/>
+    </changeSet>
+</databaseChangeLog>

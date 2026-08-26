@@ -1,6 +1,5 @@
 package auto.ui.api.controller;
 
-import auto.ui.api.constant.PageConstant;
 import auto.ui.api.dto.ApiMessageDto;
 import auto.ui.api.dto.ErrorCode;
 import auto.ui.api.dto.ResponseListDto;
@@ -8,14 +7,14 @@ import auto.ui.api.dto.page.PageDto;
 import auto.ui.api.exception.BadRequestException;
 import auto.ui.api.exception.NotFoundException;
 import auto.ui.api.form.page.AutoSavePageForm;
+import auto.ui.api.form.page.CreateDraftPageForm;
 import auto.ui.api.form.page.CreatePageForm;
-import auto.ui.api.form.page.PublishPageForm;
+import auto.ui.api.form.page.PublicVersionPageForm;
 import auto.ui.api.form.page.UpdatePageForm;
 import auto.ui.api.mapper.PageMapper;
 import auto.ui.api.model.Page;
 import auto.ui.api.model.criteria.PageCriteria;
 import auto.ui.api.repository.PageRepository;
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -28,9 +27,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/v1/page")
@@ -77,17 +74,21 @@ public class PageController extends ABasicController {
             throw new BadRequestException("Page slug already exist", ErrorCode.PAGE_ERROR_SLUG_EXIST);
         }
         Page page = pageMapper.fromFormToEntity(createPageForm);
+        page.setIsDefault(false);
         pageRepository.save(page);
         return makeSuccessResponse(pageMapper.fromEntityToPageIdDto(page), "Create page success");
     }
 
-    /** Chỉ đổi được name — slug bất biến, xem javadoc UpdatePageForm. */
+    /** Chỉ đổi được name — slug bất biến, xem javadoc UpdatePageForm. Chỉ cho phép trên bản draft. */
     @PutMapping(value = "/update", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('PAG_U')")
     @Transactional
     public ApiMessageDto<Void> update(@Valid @RequestBody UpdatePageForm updatePageForm, BindingResult bindingResult) {
         Page page = pageRepository.findById(updatePageForm.getId())
                 .orElseThrow(() -> new NotFoundException("Not found Page", ErrorCode.PAGE_ERROR_NOT_FOUND));
+        if (!Boolean.TRUE.equals(page.getIsDraft())) {
+            throw new BadRequestException("Cannot update a page that is not a draft", ErrorCode.PAGE_ERROR_UPDATE_NOT_ALLOWED);
+        }
         pageMapper.updateEntityFromForm(updatePageForm, page);
         pageRepository.save(page);
         return makeSuccessResponse("Update page success");
@@ -103,60 +104,81 @@ public class PageController extends ABasicController {
         return makeSuccessResponse("Delete page success");
     }
 
-    /**
-     * Autosave từ editor. Chỉ ghi project_data, không đụng page_config —
-     * trang công khai chỉ đổi khi publish.
-     */
+    /** Autosave từ editor. Chỉ cho phép trên bản draft. */
     @PutMapping(value = "/autosave", produces = MediaType.APPLICATION_JSON_VALUE)
     @Transactional
     public ApiMessageDto<PageDto> autosave(@Valid @RequestBody AutoSavePageForm autoSavePageForm, BindingResult bindingResult) {
         Page page = pageRepository.findById(autoSavePageForm.getId())
                 .orElseThrow(() -> new NotFoundException("Not found Page", ErrorCode.PAGE_ERROR_NOT_FOUND));
-        if (!Objects.equals(page.getVersion(), autoSavePageForm.getVersion())) {
-            throw new BadRequestException("Page was modified elsewhere, current version is "
-                    + page.getVersion(), ErrorCode.PAGE_ERROR_VERSION_CONFLICT);
+        if (!Boolean.TRUE.equals(page.getIsDraft())) {
+            throw new BadRequestException("Cannot autosave a page that is not a draft", ErrorCode.PAGE_ERROR_UPDATE_NOT_ALLOWED);
         }
         pageMapper.autoSaveEntityFromForm(autoSavePageForm, page);
-        pageRepository.saveAndFlush(page);
+        pageRepository.save(page);
         return makeSuccessResponse(pageMapper.fromEntityToPageIdDto(page), "Autosave page success");
     }
 
-    /**
-     * Publish: ghi page_config + published_at. Đừng tin client — mọi block type
-     * không nằm trong whitelist đều bị chặn ở đây (PLAN.md mục 8).
-     */
-    @PostMapping(value = "/publish", produces = MediaType.APPLICATION_JSON_VALUE)
+    /** Clone 1 page active thành bản nháp mới — chặn nếu đã có draft trỏ tới nó. */
+    @PostMapping(value = "/create-draft", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasRole('PAG_C')")
     @Transactional
-    public ApiMessageDto<PageDto> publish(@Valid @RequestBody PublishPageForm publishPageForm, BindingResult bindingResult) {
-        Page page = pageRepository.findById(publishPageForm.getId())
+    public ApiMessageDto<PageDto> createDraft(@Valid @RequestBody CreateDraftPageForm createDraftPageForm, BindingResult bindingResult) {
+        Page page = pageRepository.findById(createDraftPageForm.getId())
                 .orElseThrow(() -> new NotFoundException("Not found Page", ErrorCode.PAGE_ERROR_NOT_FOUND));
-        validateBlockTypes(publishPageForm.getConfig());
-        pageMapper.publishEntityFromForm(publishPageForm, page);
-        page.setPublishedAt(new Date());
-        pageRepository.saveAndFlush(page);
-        return makeSuccessResponse(pageMapper.fromEntityToPageIdDto(page), "Publish page success");
+        if (Boolean.TRUE.equals(page.getIsDraft())) {
+            throw new BadRequestException("Page is already a draft", ErrorCode.PAGE_ERROR_ALREADY_DRAFT);
+        }
+        if (pageRepository.existsByActiveVersionId(page.getId())) {
+            throw new BadRequestException("Draft already exists for this page", ErrorCode.PAGE_ERROR_DRAFT_EXISTS);
+        }
+        Page draft = pageMapper.fromEntityToDraft(page);
+        draft.setIsDraft(true);
+        draft.setActiveVersion(page);
+        draft.setIsDefault(false);
+        pageRepository.save(draft);
+        return makeSuccessResponse(pageMapper.fromEntityToPageIdDto(draft), "Create draft page success");
+    }
+
+    /** Promote 1 bản draft thành active version — merge nội dung lên row active rồi xoá draft. */
+    @PostMapping(value = "/public-version", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasRole('PAG_U')")
+    @Transactional
+    public ApiMessageDto<Void> publicVersion(@Valid @RequestBody PublicVersionPageForm publicVersionPageForm, BindingResult bindingResult) {
+        Page draft = pageRepository.findById(publicVersionPageForm.getId())
+                .orElseThrow(() -> new NotFoundException("Not found Page", ErrorCode.PAGE_ERROR_NOT_FOUND));
+        if (!Boolean.TRUE.equals(draft.getIsDraft())) {
+            throw new BadRequestException("Page is not a draft", ErrorCode.PAGE_ERROR_NOT_DRAFT);
+        }
+        Page activeVersion = draft.getActiveVersion();
+        if (activeVersion == null) {
+            throw new NotFoundException("Not found active version of this page", ErrorCode.PAGE_ERROR_NOT_FOUND);
+        }
+        pageMapper.updateEntityFromDraft(draft, activeVersion);
+        pageRepository.save(activeVersion);
+        pageRepository.delete(draft);
+        return makeSuccessResponse("Promote draft to active version success");
+    }
+
+    /** Đặt 1 page làm default — tự động unset page default trước đó, đảm bảo chỉ 1 page default. */
+    @PutMapping(value = "/set-default/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasRole('PAG_U')")
+    @Transactional
+    public ApiMessageDto<Void> setDefault(@PathVariable("id") Long id) {
+        Page page = pageRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Not found Page", ErrorCode.PAGE_ERROR_NOT_FOUND));
+        pageRepository.unsetDefaultExcept(page.getId());
+        page.setIsDefault(true);
+        pageRepository.save(page);
+        return makeSuccessResponse("Set default page success");
     }
 
     @GetMapping(value = "/public/get/{slug}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiMessageDto<PageDto> publicGet(@PathVariable String slug) {
         Page page = pageRepository.findFirstBySlug(slug)
                 .orElseThrow(() -> new NotFoundException("Not found Page", ErrorCode.PAGE_ERROR_NOT_FOUND));
-        if (page.getPageConfig() == null) {
+        if (Boolean.TRUE.equals(page.getIsDraft())) {
             throw new NotFoundException("Page is not published yet", ErrorCode.PAGE_ERROR_NOT_PUBLISHED);
         }
         return makeSuccessResponse(pageMapper.fromEntityToPublicPageDto(page), "Get public page success");
-    }
-
-    private void validateBlockTypes(JsonNode config) {
-        JsonNode blocks = config.path("blocks");
-        if (!blocks.isArray()) {
-            throw new BadRequestException("config.blocks must be an array", ErrorCode.PAGE_ERROR_INVALID_BLOCK);
-        }
-        for (JsonNode block : blocks) {
-            String type = block.path("type").asText();
-            if (!PageConstant.ALLOWED_BLOCK_TYPES.contains(type)) {
-                throw new BadRequestException("Block type is not allowed: " + type, ErrorCode.PAGE_ERROR_INVALID_BLOCK);
-            }
-        }
     }
 }
