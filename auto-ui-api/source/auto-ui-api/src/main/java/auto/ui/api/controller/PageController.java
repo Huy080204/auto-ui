@@ -110,6 +110,11 @@ public class PageController extends ABasicController {
             activeVersion.setIsHasDraft(false);
             pageRepository.save(activeVersion);
         }
+        if (Boolean.TRUE.equals(page.getIsHasDraft())) {
+            pageRepository.findFirstByActiveVersionId(page.getId())
+                    .ifPresent(draft -> fileService.deletePageFolder(draft.getId()));
+            pageRepository.deleteAllByActiveVersionId(page.getId());
+        }
         pageRepository.delete(page);
         fileService.deletePageFolder(id);
         return makeSuccessResponse("Delete page success");
