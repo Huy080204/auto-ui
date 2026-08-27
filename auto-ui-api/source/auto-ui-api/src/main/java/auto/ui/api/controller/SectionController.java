@@ -5,6 +5,7 @@ import auto.ui.api.dto.ErrorCode;
 import auto.ui.api.dto.ResponseListDto;
 import auto.ui.api.dto.section.SectionDto;
 import auto.ui.api.exception.NotFoundException;
+import auto.ui.api.form.section.AutoSaveSectionForm;
 import auto.ui.api.form.section.CreateSectionForm;
 import auto.ui.api.form.section.UpdateSectionForm;
 import auto.ui.api.mapper.SectionMapper;
@@ -18,18 +19,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -85,5 +77,15 @@ public class SectionController extends ABasicController {
                 .orElseThrow(() -> new NotFoundException("Not found section!", ErrorCode.SECTION_ERROR_NOT_FOUND));
         sectionRepository.delete(section);
         return makeSuccessResponse("Delete section success");
+    }
+
+    @PutMapping(value = "/autosave", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Transactional
+    public ApiMessageDto<SectionDto> autosave(@Valid @RequestBody AutoSaveSectionForm autoSaveSectionForm, BindingResult bindingResult) {
+        Section section = sectionRepository.findById(autoSaveSectionForm.getId())
+                .orElseThrow(() -> new NotFoundException("Not found Section", ErrorCode.SECTION_ERROR_NOT_FOUND));
+        sectionMapper.autoSaveEntityFromForm(autoSaveSectionForm, section);
+        sectionRepository.save(section);
+        return makeSuccessResponse(sectionMapper.fromEntityToSectionIdDto(section), "Autosave section success");
     }
 }
