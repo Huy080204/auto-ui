@@ -1,22 +1,17 @@
 package auto.ui.api.mapper;
 
 import auto.ui.api.dto.section.SectionDto;
+import auto.ui.api.form.section.AutoSaveSectionForm;
 import auto.ui.api.form.section.CreateSectionForm;
 import auto.ui.api.form.section.UpdateSectionForm;
 import auto.ui.api.model.Section;
-import org.mapstruct.BeanMapping;
-import org.mapstruct.IterableMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.Named;
-import org.mapstruct.NullValuePropertyMappingStrategy;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 
 import java.util.List;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE,
-        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+        uses = {ABasicMapper.class})
 public interface SectionMapper {
 
     @Mapping(source = "id", target = "id")
@@ -51,4 +46,8 @@ public interface SectionMapper {
     @BeanMapping(ignoreByDefault = true)
     @Named("fromEntityToSectionIdDto")
     SectionDto fromEntityToSectionIdDto(Section section);
+
+    @Mapping(source = "projectData", target = "projectData", qualifiedByName = "jsonNodeToString")
+    @BeanMapping(ignoreByDefault = true)
+    void autoSaveEntityFromForm(AutoSaveSectionForm autoSaveSectionForm, @MappingTarget Section section);
 }

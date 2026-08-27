@@ -82,36 +82,6 @@ public class UserServiceImpl implements UserDetailsService {
         return roles.stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase())).collect(Collectors.toSet());
     }
 
-    private Set<GrantedAuthority> getAccountPermissionCustomEmployee(String permissions) {
-        if (permissions == null || permissions.isBlank()) {
-            return Collections.emptySet();
-        }
-
-        return Arrays.stream(permissions.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
-                .collect(Collectors.toSet());
-    }
-
-    private Set<GrantedAuthority> getAccountPermissionCustomUser(String kind) {
-        int groupKind;
-        try {
-            groupKind = Integer.parseInt(kind);
-        } catch (NumberFormatException e) {
-            return Collections.emptySet();
-        }
-
-        Group group = groupRepository.findFirstByKind(groupKind);
-        if (group == null) {
-            return Collections.emptySet();
-        }
-
-        List<String> roles = new ArrayList<>();
-        group.getPermissions().stream().filter(f -> f.getPCode() != null).forEach(pName -> roles.add(pName.getPCode()));
-        return roles.stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase())).collect(Collectors.toSet());
-    }
-
     public OAuth2AccessToken getAccessTokenForPasswordOtp(ClientDetails client, String username, String password, String otp, String grantType, AuthorizationServerTokenServices tokenServices) {
         if (isMfaEnable && StringUtils.isBlank(otp)) {
             throw new BadRequestException("otp cannot be null", ErrorCode.AUTH_GRANT_TYPE_PASSWORD_MFA_ERROR_OTP_BLANK);

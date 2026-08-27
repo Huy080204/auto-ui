@@ -1,6 +1,7 @@
-package auto.ui.api.form.page;
+package auto.ui.api.form.section;
 
 import auto.ui.api.form.StringToLongDeserializer;
+import auto.ui.api.form.page.UpdatePageForm;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,7 +13,7 @@ import javax.validation.constraints.NotNull;
 @Getter
 @Setter
 @Schema
-public class AutoSavePageForm {
+public class AutoSaveSectionForm {
     @NotNull(message = "id cant not be null")
     @JsonDeserialize(using = StringToLongDeserializer.class)
     @Schema(name = "id", requiredMode = Schema.RequiredMode.REQUIRED)

@@ -5,7 +5,6 @@ import auto.ui.api.form.page.AutoSavePageForm;
 import auto.ui.api.form.page.CreatePageForm;
 import auto.ui.api.form.page.UpdatePageForm;
 import auto.ui.api.model.Page;
-import com.fasterxml.jackson.databind.JsonNode;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
@@ -19,7 +18,8 @@ import java.util.List;
 
 @Mapper(componentModel = "spring",
         unmappedTargetPolicy = ReportingPolicy.IGNORE,
-        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+        uses = {ABasicMapper.class})
 public interface PageMapper {
 
     @Mapping(source = "id", target = "id")
@@ -71,7 +71,7 @@ public interface PageMapper {
     @Named("fromEntityToPageIdDto")
     PageDto fromEntityToPageIdDto(Page page);
 
-    @Mapping(source = "projectData", target = "projectData")
+    @Mapping(source = "projectData", target = "projectData", qualifiedByName = "jsonNodeToString")
     @BeanMapping(ignoreByDefault = true)
     void autoSaveEntityFromForm(AutoSavePageForm autoSavePageForm, @MappingTarget Page page);
 
@@ -93,12 +93,4 @@ public interface PageMapper {
     @Mapping(source = "projectData", target = "projectData")
     @BeanMapping(ignoreByDefault = true)
     void updateEntityFromDraft(Page draft, @MappingTarget Page activeVersion);
-
-    /**
-     * Cột JSON lưu dạng chuỗi opaque, còn Form nhận nguyên cây JSON —
-     * conversion nằm ở Mapper để Controller không phải setter tay.
-     */
-    default String jsonNodeToString(JsonNode node) {
-        return node == null ? null : node.toString();
-    }
 }
