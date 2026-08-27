@@ -48,7 +48,8 @@ public class FileService {
             throw new BadRequestException("ERROR-UPLOAD-TYPE-INVALID", "Type is required in AVATAR, LOGO, SETTING");
         }
         boolean checkExtension = uploadFileForm.getType().equals("AVATAR") || uploadFileForm.getType().equals("LOGO");
-        String typeFolder = File.separator + uploadFileForm.getType();
+//        String typeFolder = File.separator + uploadFileForm.getType();
+        String typeFolder = "/" + uploadFileForm.getType();
         return store(uploadFileForm.getFile(), uploadFileForm.getType(), checkExtension, typeFolder);
     }
 
@@ -56,12 +57,14 @@ public class FileService {
         if (!pageRepository.existsById(pageId)) {
             throw new NotFoundException("Not found Page", ErrorCode.PAGE_ERROR_NOT_FOUND);
         }
-        String typeFolder = File.separator + AIConstant.FILE_UPLOAD_TYPE_PAGE + File.separator + pageId;
+//        String typeFolder = File.separator + AIConstant.FILE_UPLOAD_TYPE_PAGE + File.separator + pageId;
+        String typeFolder = "/" + AIConstant.FILE_UPLOAD_TYPE_PAGE + "/" + pageId;
         return store(file, AIConstant.FILE_UPLOAD_TYPE_PAGE, true, typeFolder);
     }
 
     public ApiMessageDto<UploadFileDto> storeMediaLibraryFile(MultipartFile file) {
-        String typeFolder = File.separator + AIConstant.FILE_UPLOAD_TYPE_MEDIA_LIBRARY;
+//        String typeFolder = File.separator + AIConstant.FILE_UPLOAD_TYPE_MEDIA_LIBRARY;
+        String typeFolder = "/" + AIConstant.FILE_UPLOAD_TYPE_MEDIA_LIBRARY;
         ApiMessageDto<UploadFileDto> uploadResult = store(file, AIConstant.FILE_UPLOAD_TYPE_MEDIA_LIBRARY, true, typeFolder);
         if (Boolean.FALSE.equals(uploadResult.getResult())) {
             throw new BadRequestException(uploadResult.getMessage(), ErrorCode.MEDIA_LIBRARY_ERROR_UPLOAD_FAILED);
@@ -110,7 +113,8 @@ public class FileService {
             Path targetLocation = fileStorageLocation.resolve(finalFile);
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
             UploadFileDto uploadFileDto = new UploadFileDto();
-            uploadFileDto.setFilePath(typeFolder + File.separator + finalFile);
+//            uploadFileDto.setFilePath(typeFolder + File.separator + finalFile);
+            uploadFileDto.setFilePath(typeFolder + "/" + finalFile);
             apiMessageDto.setData(uploadFileDto);
             apiMessageDto.setMessage("Upload file success");
         } catch (IOException e) {
@@ -124,7 +128,8 @@ public class FileService {
     public Resource loadFileAsResource(String folder, String fileName) {
 
         try {
-            Path fileStorageLocation = Paths.get(ROOT_DIRECTORY + File.separator + folder).toAbsolutePath().normalize();
+//            Path fileStorageLocation = Paths.get(ROOT_DIRECTORY + File.separator + folder).toAbsolutePath().normalize();
+            Path fileStorageLocation = Paths.get(ROOT_DIRECTORY + "/" + folder).toAbsolutePath().normalize();
             Path fP = fileStorageLocation.resolve(fileName).normalize();
             Resource resource = new UrlResource(fP.toUri());
             if (resource.exists()) {
@@ -139,7 +144,8 @@ public class FileService {
 
     public Resource loadFileAsResource(String folder, String pageId, String fileName) {
         try {
-            Path fileStorageLocation = Paths.get(ROOT_DIRECTORY + File.separator + folder + File.separator + pageId).toAbsolutePath().normalize();
+//            Path fileStorageLocation = Paths.get(ROOT_DIRECTORY + File.separator + folder + File.separator + pageId).toAbsolutePath().normalize();
+            Path fileStorageLocation = Paths.get(ROOT_DIRECTORY + "/" + folder + "/" + pageId).toAbsolutePath().normalize();
             Path fP = fileStorageLocation.resolve(fileName).normalize();
             Resource resource = new UrlResource(fP.toUri());
             if (resource.exists()) {
@@ -174,7 +180,8 @@ public class FileService {
         if (pageId == null) {
             return;
         }
-        File folder = new File(ROOT_DIRECTORY + File.separator + AIConstant.FILE_UPLOAD_TYPE_PAGE + File.separator + pageId);
+//        File folder = new File(ROOT_DIRECTORY + File.separator + AIConstant.FILE_UPLOAD_TYPE_PAGE + File.separator + pageId);
+        File folder = new File(ROOT_DIRECTORY + "/" + AIConstant.FILE_UPLOAD_TYPE_PAGE + "/" + pageId);
         if (folder.isDirectory()) {
             FileSystemUtils.deleteRecursively(folder);
         }
