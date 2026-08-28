@@ -37,7 +37,21 @@ public interface PageMapper {
     @Named("fromEntityToPageDto")
     PageDto fromEntityToPageDto(Page page);
 
-    @IterableMapping(elementTargetType = PageDto.class, qualifiedByName = "fromEntityToPageDto")
+    @Mapping(source = "id", target = "id")
+    @Mapping(source = "status", target = "status")
+    @Mapping(source = "createdDate", target = "createdDate")
+    @Mapping(source = "modifiedDate", target = "modifiedDate")
+    @Mapping(source = "name", target = "name")
+    @Mapping(source = "slug", target = "slug")
+    @Mapping(source = "isDraft", target = "isDraft")
+    @Mapping(source = "activeVersion.id", target = "activeVersionId")
+    @Mapping(source = "isDefault", target = "isDefault")
+    @Mapping(source = "isHasDraft", target = "isHasDraft")
+    @BeanMapping(ignoreByDefault = true)
+    @Named("fromEntityToPageListDto")
+    PageDto fromEntityToPageListDto(Page page);
+
+    @IterableMapping(elementTargetType = PageDto.class, qualifiedByName = "fromEntityToPageListDto")
     List<PageDto> fromEntityListToPageDtoList(List<Page> pages);
 
     /** Biến thể cho /auto-complete — chỉ id + name + slug, đủ cho dropdown chọn trang. */
