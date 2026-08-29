@@ -12,7 +12,7 @@ import auto.ui.api.form.page.CreatePageForm;
 import auto.ui.api.form.page.PublicVersionPageForm;
 import auto.ui.api.form.page.UpdatePageForm;
 import auto.ui.api.mapper.PageMapper;
-import auto.ui.api.model.Page;
+import auto.ui.api.model.Pages;
 import auto.ui.api.model.criteria.PageCriteria;
 import auto.ui.api.repository.PageRepository;
 import auto.ui.api.service.impl.UserServiceImpl;
@@ -36,7 +36,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class PageControllerTest {
+class PagesControllerTest {
 
     @Mock
     private PageRepository pageRepository;
@@ -58,10 +58,10 @@ class PageControllerTest {
 
     @Test
     void shouldReturnPageDtoWhenGetIdExists() {
-        Page page = new Page();
+        Pages pages = new Pages();
         PageDto dto = new PageDto();
-        when(pageRepository.findById(1L)).thenReturn(Optional.of(page));
-        when(pageMapper.fromEntityToPageDto(page)).thenReturn(dto);
+        when(pageRepository.findById(1L)).thenReturn(Optional.of(pages));
+        when(pageMapper.fromEntityToPageDto(pages)).thenReturn(dto);
 
         ApiMessageDto<PageDto> result = controller.get(1L);
 
@@ -74,8 +74,8 @@ class PageControllerTest {
     void shouldReturnListWhenListCalled() {
         PageCriteria criteria = new PageCriteria();
         Pageable pageable = PageRequest.of(0, 10);
-        org.springframework.data.domain.Page<Page> springPage =
-                new PageImpl<>(Collections.singletonList(new Page()));
+        org.springframework.data.domain.Page<Pages> springPage =
+                new PageImpl<>(Collections.singletonList(new Pages()));
         when(pageRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(springPage);
         when(pageMapper.fromEntityListToPageDtoList(springPage.getContent()))
                 .thenReturn(Collections.singletonList(new PageDto()));
@@ -92,8 +92,8 @@ class PageControllerTest {
     void shouldReturnListWhenAutoCompleteCalled() {
         PageCriteria criteria = new PageCriteria();
         Pageable pageable = PageRequest.of(0, 10);
-        org.springframework.data.domain.Page<Page> springPage =
-                new PageImpl<>(Collections.singletonList(new Page()));
+        org.springframework.data.domain.Page<Pages> springPage =
+                new PageImpl<>(Collections.singletonList(new Pages()));
         when(pageRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(springPage);
         when(pageMapper.fromEntityListToPageDtoAutoComplete(springPage.getContent()))
                 .thenReturn(Collections.singletonList(new PageDto()));
@@ -121,7 +121,7 @@ class PageControllerTest {
         CreatePageForm form = new CreatePageForm();
         form.setName("Home");
         form.setSlug("home");
-        Page entity = new Page();
+        Pages entity = new Pages();
         PageDto dto = new PageDto();
         when(pageRepository.existsBySlug("home")).thenReturn(false);
         when(pageMapper.fromFormToEntity(form)).thenReturn(entity);
@@ -151,9 +151,9 @@ class PageControllerTest {
     void shouldThrowBadRequestWhenUpdatingPageThatIsNotDraft() {
         UpdatePageForm form = new UpdatePageForm();
         form.setId(1L);
-        Page page = new Page();
-        page.setIsDraft(false);
-        when(pageRepository.findById(1L)).thenReturn(Optional.of(page));
+        Pages pages = new Pages();
+        pages.setIsDraft(false);
+        when(pageRepository.findById(1L)).thenReturn(Optional.of(pages));
 
         assertThatThrownBy(() -> controller.update(form, null))
                 .isInstanceOf(BadRequestException.class)
@@ -165,16 +165,16 @@ class PageControllerTest {
         UpdatePageForm form = new UpdatePageForm();
         form.setId(1L);
         form.setName("New name");
-        Page page = new Page();
-        page.setIsDraft(true);
-        when(pageRepository.findById(1L)).thenReturn(Optional.of(page));
+        Pages pages = new Pages();
+        pages.setIsDraft(true);
+        when(pageRepository.findById(1L)).thenReturn(Optional.of(pages));
 
         ApiMessageDto<Void> result = controller.update(form, null);
 
         assertThat(result.getResult()).isTrue();
         assertThat(result.getMessage()).isEqualTo("Update page success");
-        verify(pageMapper).updateEntityFromForm(form, page);
-        verify(pageRepository).save(page);
+        verify(pageMapper).updateEntityFromForm(form, pages);
+        verify(pageRepository).save(pages);
     }
 
     @Test
@@ -188,13 +188,13 @@ class PageControllerTest {
 
     @Test
     void shouldDeletePageWhenIdExists() {
-        Page page = new Page();
-        when(pageRepository.findById(1L)).thenReturn(Optional.of(page));
+        Pages pages = new Pages();
+        when(pageRepository.findById(1L)).thenReturn(Optional.of(pages));
 
         ApiMessageDto<Void> result = controller.delete(1L);
 
         assertThat(result.getResult()).isTrue();
-        verify(pageRepository).delete(page);
+        verify(pageRepository).delete(pages);
     }
 
     @Test
@@ -212,9 +212,9 @@ class PageControllerTest {
     void shouldThrowBadRequestWhenAutosavingPageThatIsNotDraft() {
         AutoSavePageForm form = new AutoSavePageForm();
         form.setId(1L);
-        Page page = new Page();
-        page.setIsDraft(false);
-        when(pageRepository.findById(1L)).thenReturn(Optional.of(page));
+        Pages pages = new Pages();
+        pages.setIsDraft(false);
+        when(pageRepository.findById(1L)).thenReturn(Optional.of(pages));
 
         assertThatThrownBy(() -> controller.autosave(form, null))
                 .isInstanceOf(BadRequestException.class)
@@ -225,18 +225,18 @@ class PageControllerTest {
     void shouldAutosavePageWhenPageIsDraft() {
         AutoSavePageForm form = new AutoSavePageForm();
         form.setId(1L);
-        Page page = new Page();
-        page.setIsDraft(true);
+        Pages pages = new Pages();
+        pages.setIsDraft(true);
         PageDto dto = new PageDto();
-        when(pageRepository.findById(1L)).thenReturn(Optional.of(page));
-        when(pageMapper.fromEntityToPageIdDto(page)).thenReturn(dto);
+        when(pageRepository.findById(1L)).thenReturn(Optional.of(pages));
+        when(pageMapper.fromEntityToPageIdDto(pages)).thenReturn(dto);
 
         ApiMessageDto<PageDto> result = controller.autosave(form, null);
 
         assertThat(result.getResult()).isTrue();
         assertThat(result.getData()).isSameAs(dto);
-        verify(pageMapper).autoSaveEntityFromForm(form, page);
-        verify(pageRepository).saveAndFlush(page);
+        verify(pageMapper).autoSaveEntityFromForm(form, pages);
+        verify(pageRepository).saveAndFlush(pages);
     }
 
     @Test
@@ -254,9 +254,9 @@ class PageControllerTest {
     void shouldThrowBadRequestWhenCreateDraftFromPageThatIsAlreadyDraft() {
         CreateDraftPageForm form = new CreateDraftPageForm();
         form.setId(1L);
-        Page page = new Page();
-        page.setIsDraft(true);
-        when(pageRepository.findById(1L)).thenReturn(Optional.of(page));
+        Pages pages = new Pages();
+        pages.setIsDraft(true);
+        when(pageRepository.findById(1L)).thenReturn(Optional.of(pages));
 
         assertThatThrownBy(() -> controller.createDraft(form, null))
                 .isInstanceOf(BadRequestException.class)
@@ -267,10 +267,10 @@ class PageControllerTest {
     void shouldThrowBadRequestWhenCreateDraftAndDraftAlreadyExists() {
         CreateDraftPageForm form = new CreateDraftPageForm();
         form.setId(1L);
-        Page page = new Page();
-        page.setId(1L);
-        page.setIsDraft(false);
-        when(pageRepository.findById(1L)).thenReturn(Optional.of(page));
+        Pages pages = new Pages();
+        pages.setId(1L);
+        pages.setIsDraft(false);
+        when(pageRepository.findById(1L)).thenReturn(Optional.of(pages));
         when(pageRepository.existsByActiveVersionId(1L)).thenReturn(true);
 
         assertThatThrownBy(() -> controller.createDraft(form, null))
@@ -282,14 +282,14 @@ class PageControllerTest {
     void shouldCreateDraftWhenActivePageHasNoExistingDraft() {
         CreateDraftPageForm form = new CreateDraftPageForm();
         form.setId(1L);
-        Page page = new Page();
-        page.setId(1L);
-        page.setIsDraft(false);
-        Page draft = new Page();
+        Pages pages = new Pages();
+        pages.setId(1L);
+        pages.setIsDraft(false);
+        Pages draft = new Pages();
         PageDto dto = new PageDto();
-        when(pageRepository.findById(1L)).thenReturn(Optional.of(page));
+        when(pageRepository.findById(1L)).thenReturn(Optional.of(pages));
         when(pageRepository.existsByActiveVersionId(1L)).thenReturn(false);
-        when(pageMapper.fromEntityToDraft(page)).thenReturn(draft);
+        when(pageMapper.fromEntityToDraft(pages)).thenReturn(draft);
         when(pageMapper.fromEntityToPageIdDto(draft)).thenReturn(dto);
 
         ApiMessageDto<PageDto> result = controller.createDraft(form, null);
@@ -297,7 +297,7 @@ class PageControllerTest {
         assertThat(result.getResult()).isTrue();
         assertThat(result.getData()).isSameAs(dto);
         assertThat(draft.getIsDraft()).isTrue();
-        assertThat(draft.getActiveVersion()).isSameAs(page);
+        assertThat(draft.getActiveVersion()).isSameAs(pages);
         assertThat(draft.getIsDefault()).isFalse();
         verify(pageRepository).save(draft);
     }
@@ -317,9 +317,9 @@ class PageControllerTest {
     void shouldThrowBadRequestWhenPublicVersionPageIsNotDraft() {
         PublicVersionPageForm form = new PublicVersionPageForm();
         form.setId(1L);
-        Page page = new Page();
-        page.setIsDraft(false);
-        when(pageRepository.findById(1L)).thenReturn(Optional.of(page));
+        Pages pages = new Pages();
+        pages.setIsDraft(false);
+        when(pageRepository.findById(1L)).thenReturn(Optional.of(pages));
 
         assertThatThrownBy(() -> controller.publicVersion(form, null))
                 .isInstanceOf(BadRequestException.class)
@@ -330,7 +330,7 @@ class PageControllerTest {
     void shouldThrowNotFoundWhenPublicVersionDraftHasNoActiveVersion() {
         PublicVersionPageForm form = new PublicVersionPageForm();
         form.setId(1L);
-        Page draft = new Page();
+        Pages draft = new Pages();
         draft.setIsDraft(true);
         draft.setActiveVersion(null);
         when(pageRepository.findById(1L)).thenReturn(Optional.of(draft));
@@ -344,8 +344,8 @@ class PageControllerTest {
     void shouldPromoteDraftToActiveVersionWhenDraftIsValid() {
         PublicVersionPageForm form = new PublicVersionPageForm();
         form.setId(2L);
-        Page activeVersion = new Page();
-        Page draft = new Page();
+        Pages activeVersion = new Pages();
+        Pages draft = new Pages();
         draft.setIsDraft(true);
         draft.setActiveVersion(activeVersion);
         when(pageRepository.findById(2L)).thenReturn(Optional.of(draft));
@@ -370,16 +370,16 @@ class PageControllerTest {
 
     @Test
     void shouldSetDefaultAndUnsetPreviousDefaultWhenIdExists() {
-        Page page = new Page();
-        page.setId(1L);
-        when(pageRepository.findById(1L)).thenReturn(Optional.of(page));
+        Pages pages = new Pages();
+        pages.setId(1L);
+        when(pageRepository.findById(1L)).thenReturn(Optional.of(pages));
 
         ApiMessageDto<Void> result = controller.setDefault(1L);
 
         assertThat(result.getResult()).isTrue();
-        assertThat(page.getIsDefault()).isTrue();
+        assertThat(pages.getIsDefault()).isTrue();
         verify(pageRepository).unsetDefaultExcept(1L);
-        verify(pageRepository).save(page);
+        verify(pageRepository).save(pages);
     }
 
     @Test
@@ -393,9 +393,9 @@ class PageControllerTest {
 
     @Test
     void shouldThrowNotFoundWhenPublicGetPageIsStillDraft() {
-        Page page = new Page();
-        page.setIsDraft(true);
-        when(pageRepository.findFirstBySlug("home")).thenReturn(Optional.of(page));
+        Pages pages = new Pages();
+        pages.setIsDraft(true);
+        when(pageRepository.findFirstBySlug("home")).thenReturn(Optional.of(pages));
 
         assertThatThrownBy(() -> controller.publicGet("home"))
                 .isInstanceOf(NotFoundException.class)
@@ -404,11 +404,11 @@ class PageControllerTest {
 
     @Test
     void shouldReturnPublicPageDtoWhenPageIsActive() {
-        Page page = new Page();
-        page.setIsDraft(false);
+        Pages pages = new Pages();
+        pages.setIsDraft(false);
         PageDto dto = new PageDto();
-        when(pageRepository.findFirstBySlug("home")).thenReturn(Optional.of(page));
-        when(pageMapper.fromEntityToPublicPageDto(page)).thenReturn(dto);
+        when(pageRepository.findFirstBySlug("home")).thenReturn(Optional.of(pages));
+        when(pageMapper.fromEntityToPublicPageDto(pages)).thenReturn(dto);
 
         ApiMessageDto<PageDto> result = controller.publicGet("home");
 

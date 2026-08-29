@@ -20,6 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -73,7 +74,7 @@ public class UserServiceImpl implements UserDetailsService {
         }
         Set<GrantedAuthority> grantedAuthorities = getAccountPermission(user);
 
-        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), enabled, true, true, true, grantedAuthorities);
+        return new User(user.getUsername(), user.getPassword(), enabled, true, true, true, grantedAuthorities);
     }
 
     private Set<GrantedAuthority> getAccountPermission(Account user) {
@@ -98,7 +99,7 @@ public class UserServiceImpl implements UserDetailsService {
         OAuth2Request oAuth2Request = new OAuth2Request(requestParameters, clientId,
                 userDetails.getAuthorities(), approved, client.getScope(),
                 client.getResourceIds(), null, responseTypes, extensionProperties);
-        org.springframework.security.core.userdetails.User userPrincipal = new org.springframework.security.core.userdetails.User(userDetails.getUsername(), userDetails.getPassword(), userDetails.isEnabled(), userDetails.isAccountNonExpired(), userDetails.isCredentialsNonExpired(), userDetails.isAccountNonLocked(), userDetails.getAuthorities());
+        User userPrincipal = new User(userDetails.getUsername(), userDetails.getPassword(), userDetails.isEnabled(), userDetails.isAccountNonExpired(), userDetails.isCredentialsNonExpired(), userDetails.isAccountNonLocked(), userDetails.getAuthorities());
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userPrincipal, null, userDetails.getAuthorities());
         OAuth2Authentication auth = new OAuth2Authentication(oAuth2Request, authenticationToken);
         return tokenServices.createAccessToken(auth);
@@ -122,7 +123,7 @@ public class UserServiceImpl implements UserDetailsService {
             }
         }
         Set<GrantedAuthority> grantedAuthorities = getAccountPermission(user);
-        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), true, true, true, true, grantedAuthorities);
+        return new User(user.getUsername(), user.getPassword(), true, true, true, true, grantedAuthorities);
     }
 
     public OAuth2AccessToken getAccessTokenForMultipleTenancies(ClientDetails client, TokenRequest tokenRequest, String username, String password, String tenant, AuthorizationServerTokenServices tokenServices) throws GeneralSecurityException, IOException {
@@ -140,7 +141,7 @@ public class UserServiceImpl implements UserDetailsService {
         OAuth2Request oAuth2Request = new OAuth2Request(requestParameters, clientId,
                 userDetails.getAuthorities(), approved, client.getScope(),
                 client.getResourceIds(), null, responseTypes, extensionProperties);
-        org.springframework.security.core.userdetails.User userPrincipal = new org.springframework.security.core.userdetails.User(userDetails.getUsername(), userDetails.getPassword(), userDetails.isEnabled(), userDetails.isAccountNonExpired(), userDetails.isCredentialsNonExpired(), userDetails.isAccountNonLocked(), userDetails.getAuthorities());
+        User userPrincipal = new User(userDetails.getUsername(), userDetails.getPassword(), userDetails.isEnabled(), userDetails.isAccountNonExpired(), userDetails.isCredentialsNonExpired(), userDetails.isAccountNonLocked(), userDetails.getAuthorities());
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userPrincipal, null, userDetails.getAuthorities());
         OAuth2Authentication auth = new OAuth2Authentication(oAuth2Request, authenticationToken);
         return tokenServices.createAccessToken(auth);
