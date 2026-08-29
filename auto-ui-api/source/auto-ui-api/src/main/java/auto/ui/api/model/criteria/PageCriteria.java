@@ -1,6 +1,6 @@
 package auto.ui.api.model.criteria;
 
-import auto.ui.api.model.Page;
+import auto.ui.api.model.Pages;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.springframework.data.jpa.domain.Specification;
@@ -21,14 +21,15 @@ public class PageCriteria implements Serializable {
     private String name;
     private String slug;
     private Integer status;
+    private Boolean isDraft;
 
     @Schema(hidden = true)
-    public Specification<Page> getCriteria() {
-        return new Specification<Page>() {
+    public Specification<Pages> getCriteria() {
+        return new Specification<Pages>() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public Predicate toPredicate(Root<Page> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+            public Predicate toPredicate(Root<Pages> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
                 List<Predicate> predicates = new ArrayList<>();
                 if (getId() != null) {
                     predicates.add(cb.equal(root.get("id"), getId()));
@@ -44,6 +45,10 @@ public class PageCriteria implements Serializable {
 
                 if (getStatus() != null) {
                     predicates.add(cb.equal(root.get("status"), getStatus()));
+                }
+
+                if (getIsDraft() != null) {
+                    predicates.add(cb.equal(root.get("isDraft"), getIsDraft()));
                 }
                 return cb.and(predicates.toArray(new Predicate[predicates.size()]));
             }

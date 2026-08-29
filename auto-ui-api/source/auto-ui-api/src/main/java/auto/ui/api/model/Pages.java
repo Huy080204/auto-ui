@@ -24,7 +24,7 @@ import javax.persistence.Table;
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
-public class Page extends Auditable<String> {
+public class Pages extends Auditable<String> {
     private String name;
 
     private String slug;
@@ -36,7 +36,7 @@ public class Page extends Auditable<String> {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "active_version_id")
-    private Page activeVersion;
+    private Pages activeVersion;
 
     private Boolean isDefault;
 

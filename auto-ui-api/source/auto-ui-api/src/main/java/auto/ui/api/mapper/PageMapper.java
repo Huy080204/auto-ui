@@ -4,7 +4,7 @@ import auto.ui.api.dto.page.PageDto;
 import auto.ui.api.form.page.AutoSavePageForm;
 import auto.ui.api.form.page.CreatePageForm;
 import auto.ui.api.form.page.UpdatePageForm;
-import auto.ui.api.model.Page;
+import auto.ui.api.model.Pages;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
@@ -35,7 +35,7 @@ public interface PageMapper {
     @Mapping(source = "isHasDraft", target = "isHasDraft")
     @BeanMapping(ignoreByDefault = true)
     @Named("fromEntityToPageDto")
-    PageDto fromEntityToPageDto(Page page);
+    PageDto fromEntityToPageDto(Pages pages);
 
     @Mapping(source = "id", target = "id")
     @Mapping(source = "status", target = "status")
@@ -49,10 +49,10 @@ public interface PageMapper {
     @Mapping(source = "isHasDraft", target = "isHasDraft")
     @BeanMapping(ignoreByDefault = true)
     @Named("fromEntityToPageListDto")
-    PageDto fromEntityToPageListDto(Page page);
+    PageDto fromEntityToPageListDto(Pages pages);
 
     @IterableMapping(elementTargetType = PageDto.class, qualifiedByName = "fromEntityToPageListDto")
-    List<PageDto> fromEntityListToPageDtoList(List<Page> pages);
+    List<PageDto> fromEntityListToPageDtoList(List<Pages> pages);
 
     /** Biến thể cho /auto-complete — chỉ id + name + slug, đủ cho dropdown chọn trang. */
     @Mapping(source = "id", target = "id")
@@ -60,16 +60,16 @@ public interface PageMapper {
     @Mapping(source = "slug", target = "slug")
     @BeanMapping(ignoreByDefault = true)
     @Named("fromEntityToPageAutoCompleteDto")
-    PageDto fromEntityToPageAutoCompleteDto(Page page);
+    PageDto fromEntityToPageAutoCompleteDto(Pages pages);
 
     @IterableMapping(elementTargetType = PageDto.class, qualifiedByName = "fromEntityToPageAutoCompleteDto")
-    List<PageDto> fromEntityListToPageDtoAutoComplete(List<Page> pages);
+    List<PageDto> fromEntityListToPageDtoAutoComplete(List<Pages> pages);
 
     @Mapping(source = "name", target = "name")
     @Mapping(source = "slug", target = "slug")
     @BeanMapping(ignoreByDefault = true)
     @Named("fromFormToEntity")
-    Page fromFormToEntity(CreatePageForm createPageForm);
+    Pages fromFormToEntity(CreatePageForm createPageForm);
 
     /** Bản rút gọn cho endpoint public — Next.js chỉ cần tên trang và nội dung. */
     @Mapping(source = "name", target = "name")
@@ -77,22 +77,22 @@ public interface PageMapper {
     @Mapping(source = "projectData", target = "projectData")
     @BeanMapping(ignoreByDefault = true)
     @Named("fromEntityToPublicPageDto")
-    PageDto fromEntityToPublicPageDto(Page page);
+    PageDto fromEntityToPublicPageDto(Pages pages);
 
     /** Chỉ trả id — response chuẩn cho create theo itz-controller-conventions.md. */
     @Mapping(source = "id", target = "id")
     @BeanMapping(ignoreByDefault = true)
     @Named("fromEntityToPageIdDto")
-    PageDto fromEntityToPageIdDto(Page page);
+    PageDto fromEntityToPageIdDto(Pages pages);
 
     @Mapping(source = "projectData", target = "projectData", qualifiedByName = "jsonNodeToString")
     @BeanMapping(ignoreByDefault = true)
-    void autoSaveEntityFromForm(AutoSavePageForm autoSavePageForm, @MappingTarget Page page);
+    void autoSaveEntityFromForm(AutoSavePageForm autoSavePageForm, @MappingTarget Pages pages);
 
     /** Chỉ name — slug bất biến sau khi tạo, xem javadoc UpdatePageForm. */
     @Mapping(source = "name", target = "name")
     @BeanMapping(ignoreByDefault = true)
-    void updateEntityFromForm(UpdatePageForm updatePageForm, @MappingTarget Page page);
+    void updateEntityFromForm(UpdatePageForm updatePageForm, @MappingTarget Pages pages);
 
     /** Clone bản active thành draft mới — name/slug/projectData, phần còn lại Controller tự set. */
     @Mapping(source = "name", target = "name")
@@ -100,11 +100,11 @@ public interface PageMapper {
     @Mapping(source = "projectData", target = "projectData")
     @BeanMapping(ignoreByDefault = true)
     @Named("fromEntityToDraft")
-    Page fromEntityToDraft(Page page);
+    Pages fromEntityToDraft(Pages pages);
 
     /** Merge nội dung draft lên row active khi promote — giữ nguyên id/slug/isDefault của active. */
     @Mapping(source = "name", target = "name")
     @Mapping(source = "projectData", target = "projectData")
     @BeanMapping(ignoreByDefault = true)
-    void updateEntityFromDraft(Page draft, @MappingTarget Page activeVersion);
+    void updateEntityFromDraft(Pages draft, @MappingTarget Pages activeVersion);
 }
