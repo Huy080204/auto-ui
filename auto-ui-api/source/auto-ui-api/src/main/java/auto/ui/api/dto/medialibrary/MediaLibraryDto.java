@@ -9,4 +9,7 @@ import lombok.Data;
 public class MediaLibraryDto extends ABasicAdminDto {
     @Schema(name = "url")
     private String url;
+
+    @Schema(name = "kind")
+    private Integer kind;
 }

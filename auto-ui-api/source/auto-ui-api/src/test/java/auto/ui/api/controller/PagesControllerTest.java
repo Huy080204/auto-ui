@@ -15,6 +15,7 @@ import auto.ui.api.mapper.PageMapper;
 import auto.ui.api.model.Pages;
 import auto.ui.api.model.criteria.PageCriteria;
 import auto.ui.api.repository.PageRepository;
+import auto.ui.api.service.FileService;
 import auto.ui.api.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +33,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -44,6 +46,8 @@ class PagesControllerTest {
     private PageMapper pageMapper;
     @Mock
     private UserServiceImpl userService;
+    @Mock
+    private FileService fileService;
     @InjectMocks
     private PageController controller;
 
@@ -195,6 +199,7 @@ class PagesControllerTest {
 
         assertThat(result.getResult()).isTrue();
         verify(pageRepository).delete(pages);
+        verify(fileService).deletePageFolder(1L);
     }
 
     @Test
@@ -236,7 +241,7 @@ class PagesControllerTest {
         assertThat(result.getResult()).isTrue();
         assertThat(result.getData()).isSameAs(dto);
         verify(pageMapper).autoSaveEntityFromForm(form, pages);
-        verify(pageRepository).saveAndFlush(pages);
+        verify(pageRepository).save(pages);
     }
 
     @Test
@@ -299,7 +304,8 @@ class PagesControllerTest {
         assertThat(draft.getIsDraft()).isTrue();
         assertThat(draft.getActiveVersion()).isSameAs(pages);
         assertThat(draft.getIsDefault()).isFalse();
-        verify(pageRepository).save(draft);
+        verify(pageRepository).save(same(draft));
+        verify(pageRepository).save(same(pages));
     }
 
     @Test

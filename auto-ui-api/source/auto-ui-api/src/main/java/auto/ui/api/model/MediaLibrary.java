@@ -16,4 +16,5 @@ import javax.persistence.Table;
 @Setter
 public class MediaLibrary extends Auditable<String> {
     private String url;
+    private Integer kind;
 }

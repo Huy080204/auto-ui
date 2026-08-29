@@ -35,6 +35,7 @@ import java.util.List;
 public class FileService {
     static final String[] UPLOAD_TYPES = new String[]{"AVATAR", "LOGO", "SETTING"};
     static final String[] AVATAR_EXTENSION = new String[]{"jpeg", "jpg", "gif", "bmp", "png"};
+    static final String MEDIA_LIBRARY_SVG_EXTENSION = "svg";
 
     @Value("${file.upload-dir}")
     private String ROOT_DIRECTORY;
@@ -76,7 +77,9 @@ public class FileService {
         ApiMessageDto<UploadFileDto> apiMessageDto = new ApiMessageDto<>();
         try {
             String extension = FilenameUtils.getExtension(file.getOriginalFilename());
-            if (!Arrays.stream(AVATAR_EXTENSION).anyMatch(extension::equalsIgnoreCase)) {
+            boolean validExtension = Arrays.stream(AVATAR_EXTENSION).anyMatch(extension::equalsIgnoreCase)
+                    || MEDIA_LIBRARY_SVG_EXTENSION.equalsIgnoreCase(extension);
+            if (!validExtension) {
                 throw new BadRequestException("ERROR-FILE-FORMAT-INVALID", "File format is invalid");
             }
 
@@ -103,7 +106,9 @@ public class FileService {
         try {
             String fileName = StringUtils.cleanPath(file.getOriginalFilename());
             String extension = FilenameUtils.getExtension(fileName);
-            if (checkExtension && !Arrays.stream(AVATAR_EXTENSION).anyMatch(extension::equalsIgnoreCase)) {
+            boolean validExtension = Arrays.stream(AVATAR_EXTENSION).anyMatch(extension::equalsIgnoreCase)
+                    || (AIConstant.FILE_UPLOAD_TYPE_MEDIA_LIBRARY.equals(type) && MEDIA_LIBRARY_SVG_EXTENSION.equalsIgnoreCase(extension));
+            if (checkExtension && !validExtension) {
                 throw new BadRequestException("ERROR-FILE-FORMAT-INVALID", "File format is invalid");
             }
             String finalFile = type + "_" + RandomStringUtils.randomAlphanumeric(10) + "." + extension;

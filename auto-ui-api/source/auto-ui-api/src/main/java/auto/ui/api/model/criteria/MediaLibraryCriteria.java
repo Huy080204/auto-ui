@@ -19,6 +19,7 @@ public class MediaLibraryCriteria implements Serializable {
 
     private Long id;
     private String url;
+    private Integer kind;
     private Integer status;
 
     @Schema(hidden = true)
@@ -34,6 +35,10 @@ public class MediaLibraryCriteria implements Serializable {
 
                 if (!StringUtils.isEmpty(getUrl())) {
                     predicates.add(cb.like(cb.lower(root.get("url")), "%" + getUrl().toLowerCase() + "%"));
+                }
+
+                if (getKind() != null) {
+                    predicates.add(cb.equal(root.get("kind"), getKind()));
                 }
 
                 if (getStatus() != null) {

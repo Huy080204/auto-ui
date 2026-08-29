@@ -62,7 +62,7 @@ public class MediaLibraryController extends ABasicController {
     public ApiMessageDto<MediaLibraryDto> create(@Valid CreateMediaLibraryForm createMediaLibraryForm, BindingResult bindingResult) {
         ApiMessageDto<UploadFileDto> uploadResult = fileService.storeMediaLibraryFile(createMediaLibraryForm.getFile());
 
-        MediaLibrary mediaLibrary = new MediaLibrary();
+        MediaLibrary mediaLibrary = mediaLibraryMapper.fromFormToEntity(createMediaLibraryForm);
         mediaLibrary.setUrl(uploadResult.getData().getFilePath());
         mediaLibraryRepository.save(mediaLibrary);
         return makeSuccessResponse(mediaLibraryMapper.fromEntityToMediaLibraryIdDto(mediaLibrary), "Create media library success");
