@@ -1,6 +1,7 @@
 package auto.ui.api.mapper;
 
 import auto.ui.api.dto.medialibrary.MediaLibraryDto;
+import auto.ui.api.form.medialibrary.CreateMediaLibraryForm;
 import auto.ui.api.model.MediaLibrary;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.IterableMapping;
@@ -18,6 +19,7 @@ public interface MediaLibraryMapper {
 
     @Mapping(source = "id", target = "id")
     @Mapping(source = "url", target = "url")
+    @Mapping(source = "kind", target = "kind")
     @Mapping(source = "status", target = "status")
     @Mapping(source = "createdDate", target = "createdDate")
     @Mapping(source = "modifiedDate", target = "modifiedDate")
@@ -32,4 +34,8 @@ public interface MediaLibraryMapper {
     @BeanMapping(ignoreByDefault = true)
     @Named("fromEntityToMediaLibraryIdDto")
     MediaLibraryDto fromEntityToMediaLibraryIdDto(MediaLibrary mediaLibrary);
+
+    @Mapping(source = "kind", target = "kind")
+    @BeanMapping(ignoreByDefault = true)
+    MediaLibrary fromFormToEntity(CreateMediaLibraryForm createMediaLibraryForm);
 }
